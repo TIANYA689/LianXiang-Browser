@@ -1,0 +1,23 @@
+{
+  "browser": {
+    "enabled": true,
+    "defaultProfile": "lianxiang-browser",
+    "profiles": {
+      "lianxiang-browser": {
+        "cdpUrl": "http://127.0.0.1:19876",
+        "color": "#0F766E"
+      }
+    }
+  },
+  "skills": {
+    "entries": {
+      "lianxiang-browser-openclaw": {
+        "enabled": true,
+        "env": {
+          "LIANXIANG_BROWSER_BASE_URL": "http://127.0.0.1:19876",
+          "LIANXIANG_BROWSER_API_HEADER": "X-LianXiang-Api-Key"
+        }
+      }
+    }
+  }
+}

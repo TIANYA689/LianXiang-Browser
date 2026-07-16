@@ -1,0 +1,4 @@
+interface:
+  display_name: "链享浏览器 OpenClaw Plan"
+  short_description: "Plan and maintain lianxiang-browser OpenClaw integration"
+  default_prompt: "Use $lianxiang-browser-openclaw-automation-plan to review or update the lianxiang-browser and OpenClaw integration plan."
