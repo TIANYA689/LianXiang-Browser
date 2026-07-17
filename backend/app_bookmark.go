@@ -57,7 +57,12 @@ func (a *App) BookmarkSave(items []BrowserBookmark) error {
 		name := strings.TrimSpace(item.Name)
 		url := strings.TrimSpace(item.URL)
 		if name != "" && url != "" {
-			valid = append(valid, BrowserBookmark{Name: name, URL: url, OpenOnStart: item.OpenOnStart})
+			valid = append(valid, BrowserBookmark{
+				Name:        name,
+				URL:         url,
+				Folder:      normalizeBookmarkFolder(item.Folder),
+				OpenOnStart: item.OpenOnStart,
+			})
 		}
 	}
 	valid = mergeBookmarksByURL(valid, verificationBookmarkList)
@@ -100,7 +105,12 @@ func mergeBookmarksByURL(items []BrowserBookmark, required []BrowserBookmark) []
 			return
 		}
 		seen[key] = struct{}{}
-		merged = append(merged, BrowserBookmark{Name: name, URL: url, OpenOnStart: item.OpenOnStart})
+		merged = append(merged, BrowserBookmark{
+			Name:        name,
+			URL:         url,
+			Folder:      normalizeBookmarkFolder(item.Folder),
+			OpenOnStart: item.OpenOnStart,
+		})
 	}
 	for _, item := range items {
 		appendOne(item)
@@ -109,6 +119,19 @@ func mergeBookmarksByURL(items []BrowserBookmark, required []BrowserBookmark) []
 		appendOne(item)
 	}
 	return merged
+}
+
+func normalizeBookmarkFolder(folder string) string {
+	parts := strings.FieldsFunc(folder, func(r rune) bool {
+		return r == '/' || r == '\\'
+	})
+	clean := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if part = strings.TrimSpace(part); part != "" {
+			clean = append(clean, part)
+		}
+	}
+	return strings.Join(clean, "/")
 }
 
 // BookmarkSyncToProfiles 将当前默认书签增量同步到已有未运行实例。

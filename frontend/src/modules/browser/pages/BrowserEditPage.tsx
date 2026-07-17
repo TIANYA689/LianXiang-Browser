@@ -12,6 +12,7 @@ import { ProxyPickerModal } from '../components/ProxyPickerModal'
 
 const fallbackLowLaunchArgs = ['--disable-sync', '--no-first-run']
 const directProxyID = '__direct__'
+const chromeImportTag = 'Chrome 导入'
 type ProxySourceMode = 'pool' | 'local'
 
 function normalizeLaunchArgs(args: string[]): string[] {
@@ -21,6 +22,11 @@ function normalizeLaunchArgs(args: string[]): string[] {
 function resolveDefaultLaunchArgs(args: string[]): string[] {
   const normalized = normalizeLaunchArgs(args)
   return normalized.length > 0 ? normalized : fallbackLowLaunchArgs
+}
+
+function fingerprintArgsEqual(left: string[], right: string[]): boolean {
+  if (left.length !== right.length) return false
+  return left.every((item, index) => item === right[index])
 }
 
 function resolvePoolProxySelection(
@@ -77,6 +83,9 @@ export function BrowserEditPage() {
   const [isDirty, setIsDirty] = useState(false)
   const [leaveConfirm, setLeaveConfirm] = useState(false)
   const [saveError, setSaveError] = useState('')
+  const [fingerprintRiskConfirm, setFingerprintRiskConfirm] = useState(false)
+  const [isChromeImported, setIsChromeImported] = useState(false)
+  const [originalFingerprintArgs, setOriginalFingerprintArgs] = useState<string[]>([])
   const [locationResolving, setLocationResolving] = useState(false)
   const [locationResult, setLocationResult] = useState<ProxyLocationResolveResult | null>(null)
 
@@ -110,6 +119,11 @@ export function BrowserEditPage() {
         ? ''
         : current.coreId
       const resolvedProxy = resolvePoolProxySelection(current.proxyId || '', current.proxyConfig || '', proxyList)
+      setIsChromeImported(
+        (current.tags || []).includes(chromeImportTag)
+        || (current.userDataDir || '').toLowerCase().startsWith('chrome-import-'),
+      )
+      setOriginalFingerprintArgs([...(current.fingerprintArgs || [])])
       setProxyMode(resolvedProxy.mode)
       setFormData({
         profileName: current.profileName,
@@ -155,7 +169,7 @@ export function BrowserEditPage() {
     }
   }
 
-  const handleSave = async () => {
+  const saveProfile = async () => {
     const resolvedProxyId = proxyMode === 'pool' ? (formData.proxyId || '').trim() : ''
     const resolvedProxyConfig = proxyMode === 'local' ? (formData.proxyConfig || '').trim() : ''
     if (proxyMode === 'local' && !resolvedProxyConfig) {
@@ -195,6 +209,18 @@ export function BrowserEditPage() {
     } finally {
       setSaving(false)
     }
+  }
+
+  const handleSave = () => {
+    if (
+      !isCreate
+      && isChromeImported
+      && !fingerprintArgsEqual(originalFingerprintArgs, formData.fingerprintArgs)
+    ) {
+      setFingerprintRiskConfirm(true)
+      return
+    }
+    void saveProfile()
   }
 
   const handleBack = () => {
@@ -416,6 +442,17 @@ export function BrowserEditPage() {
           )}
         </div>
       </Card>
+
+      <ConfirmModal
+        open={fingerprintRiskConfirm}
+        onClose={() => setFingerprintRiskConfirm(false)}
+        onConfirm={() => { void saveProfile() }}
+        title="确认修改 Chrome 导入实例的指纹？"
+        content="当前实例来自 Chrome 用户数据目录。修改浏览器指纹后，网站可能将其识别为新设备，触发风控验证、退出登录或要求重新登录。是否仍要保存？"
+        confirmText="仍然保存"
+        cancelText="返回检查"
+        danger
+      />
 
       <ConfirmModal
         open={leaveConfirm}

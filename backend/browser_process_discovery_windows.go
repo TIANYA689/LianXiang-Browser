@@ -29,7 +29,7 @@ func findBrowserUserDataProcessesOS(userDataDir string) ([]browserUserDataProces
 $ErrorActionPreference = 'SilentlyContinue'
 $target = [System.IO.Path]::GetFullPath($UserDataDir).TrimEnd('\')
 $items = @()
-Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -and $_.CommandLine -match '--user-data-dir=' } | ForEach-Object {
+Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%--user-data-dir=%'" | ForEach-Object {
   $cmd = [string]$_.CommandLine
   $match = [regex]::Match($cmd, '--user-data-dir=(?:"([^"]+)"|([^\s]+))')
   if (-not $match.Success) { return }
@@ -117,7 +117,7 @@ func findBrowserProcessByPID(pid int) ([]browserUserDataProcess, error) {
 	}
 	psScript := `param([int]$PidValue)
 $ErrorActionPreference = 'SilentlyContinue'
-$p = Get-CimInstance Win32_Process | Where-Object { $_.ProcessId -eq $PidValue } | Select-Object -First 1
+$p = Get-CimInstance Win32_Process -Filter "ProcessId = $PidValue" | Select-Object -First 1
 if ($null -eq $p) { exit 0 }
 $cmd = [string]$p.CommandLine
 $port = 0
@@ -141,8 +141,13 @@ if ($portMatch.Success) { [void][int]::TryParse($portMatch.Groups[1].Value, [ref
 }
 
 func runPowerShellJSON(script string, args ...string) ([]byte, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), 8*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
+
+	invocation, err := buildPowerShellInvocation(script, args...)
+	if err != nil {
+		return nil, err
+	}
 
 	powershellPath := `C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe`
 	if _, err := exec.LookPath(powershellPath); err != nil {
@@ -151,8 +156,7 @@ func runPowerShellJSON(script string, args ...string) ([]byte, error) {
 		}
 	}
 
-	commandArgs := []string{"-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", script}
-	commandArgs = append(commandArgs, args...)
+	commandArgs := []string{"-NoProfile", "-ExecutionPolicy", "Bypass", "-Command", invocation}
 	cmd := exec.CommandContext(ctx, powershellPath, commandArgs...)
 	hideWindow(cmd)
 	output, err := cmd.Output()
@@ -160,7 +164,46 @@ func runPowerShellJSON(script string, args ...string) ([]byte, error) {
 		return nil, fmt.Errorf("powershell query timed out")
 	}
 	if err != nil {
-		return nil, err
+		if exitErr, ok := err.(*exec.ExitError); ok {
+			stderr := strings.TrimSpace(string(exitErr.Stderr))
+			if stderr != "" {
+				return nil, fmt.Errorf("powershell query failed: %s", stderr)
+			}
+		}
+		return nil, fmt.Errorf("powershell query failed: %w", err)
 	}
 	return output, nil
+}
+
+func buildPowerShellInvocation(script string, args ...string) (string, error) {
+	if len(args)%2 != 0 {
+		return "", fmt.Errorf("powershell arguments must be name-value pairs")
+	}
+
+	var invocation strings.Builder
+	invocation.WriteString("$__lianxiangParams = @{}\n")
+	for index := 0; index < len(args); index += 2 {
+		name := strings.TrimPrefix(args[index], "-")
+		if !isPowerShellParameterName(name) {
+			return "", fmt.Errorf("invalid powershell parameter name %q", args[index])
+		}
+		value := strings.ReplaceAll(args[index+1], "'", "''")
+		fmt.Fprintf(&invocation, "$__lianxiangParams['%s'] = '%s'\n", name, value)
+	}
+	invocation.WriteString("& {\n")
+	invocation.WriteString(script)
+	invocation.WriteString("\n} @__lianxiangParams")
+	return invocation.String(), nil
+}
+
+func isPowerShellParameterName(name string) bool {
+	if name == "" {
+		return false
+	}
+	for _, char := range name {
+		if (char < 'a' || char > 'z') && (char < 'A' || char > 'Z') && (char < '0' || char > '9') && char != '_' {
+			return false
+		}
+	}
+	return true
 }

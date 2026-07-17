@@ -455,9 +455,8 @@ export function BrowserProfilesPanel({
     {
       key: 'profileName',
       title: '实例名称',
-      width: 320,
       render: (value, record) => (
-        <div className="flex min-w-[260px] flex-col gap-1">
+        <div className="flex min-w-0 flex-col gap-1">
           <Link className="block truncate whitespace-nowrap text-[var(--color-accent)] text-sm font-medium hover:underline" to={`/browser/detail/${record.profileId}`} title={String(value || '')}>
             {value}
           </Link>
@@ -472,7 +471,6 @@ export function BrowserProfilesPanel({
     {
       key: 'running',
       title: '状态',
-      width: 100,
       render: (_, record) => {
         const status = getProfileStatus(record)
         return <Badge variant={status.variant} dot>{status.label}</Badge>
@@ -500,7 +498,6 @@ export function BrowserProfilesPanel({
     {
       key: 'keywords',
       title: '关键字',
-      width: 200,
       render: (value) => <KeywordInlineRow keywords={value || []} />,
     },
     {
@@ -511,7 +508,6 @@ export function BrowserProfilesPanel({
     {
       key: 'actions',
       title: '操作',
-      width: 248,
       align: 'right',
       render: (_, record) => {
         const isStarting = isProfileStarting(record.profileId)
@@ -561,6 +557,7 @@ export function BrowserProfilesPanel({
             columns={columns}
             data={profiles}
             rowKey="profileId"
+            density="compact"
           />
         ) : (
           <div className="flex flex-wrap gap-4 min-h-[500px] p-4 items-start content-start">

@@ -262,6 +262,12 @@ function Resolve-NsisPath {
         $candidates += (Join-Path $env:NSIS_HOME "makensis.exe")
     }
 
+    $localNsisDir = Join-Path $repoRoot ".local-tools\nsis"
+    $candidates += @(
+        (Join-Path $localNsisDir "makensis.exe"),
+        (Join-Path $localNsisDir "Bin\makensis.exe")
+    )
+
     $whereMakensis = Get-Command makensis.exe -ErrorAction SilentlyContinue
     if ($whereMakensis) {
         $candidates += $whereMakensis.Source
@@ -284,7 +290,7 @@ function Resolve-NsisPath {
         }
     }
 
-    throw "未找到 NSIS（makensis.exe）`n`n  请安装 NSIS 后，通过以下任一方式配置（PowerShell）：`n    setx MAKENSIS_PATH ""D:\tools\NSIS\makensis.exe""`n    setx NSIS_PATH     ""D:\tools\NSIS""`n    setx NSIS_HOME     ""D:\tools\NSIS""`n`n  或下载安装：https://nsis.sourceforge.io/Download"
+    throw "未找到 NSIS（makensis.exe）`n`n  可将 NSIS 安装到项目目录 .local-tools\nsis，或通过以下任一方式配置（PowerShell）：`n    setx MAKENSIS_PATH ""D:\tools\NSIS\makensis.exe""`n    setx NSIS_PATH     ""D:\tools\NSIS""`n    setx NSIS_HOME     ""D:\tools\NSIS""`n`n  官方下载：https://nsis.sourceforge.io/Download"
 }
 
 function Build-WindowsBinary {

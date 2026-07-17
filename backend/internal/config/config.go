@@ -99,6 +99,7 @@ type RuntimeConfig struct {
 type BrowserBookmark struct {
 	Name        string `yaml:"name" json:"name"`
 	URL         string `yaml:"url" json:"url"`
+	Folder      string `yaml:"folder,omitempty" json:"folder"`
 	OpenOnStart bool   `yaml:"open_on_start,omitempty" json:"openOnStart"`
 }
 

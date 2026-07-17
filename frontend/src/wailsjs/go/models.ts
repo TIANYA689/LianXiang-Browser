@@ -1,11 +1,11 @@
 export namespace automation {
-	
+
 	export class ScriptPublicAPIVariable {
 	    name: string;
 	    defaultValue: string;
 	    description: string;
 	    required: boolean;
-	
+
 	    static createFrom(source: any = {}) {
 	        return new ScriptPublicAPIVariable(source);
 	    }
@@ -439,6 +439,30 @@ export namespace backend {
 	        this.query = source["query"];
 	        this.useProxy = source["useProxy"];
 	        this.proxyConfig = source["proxyConfig"];
+	    }
+	}
+	export class ChromeUserDataImportResult {
+	    cancelled: boolean;
+	    profileId: string;
+	    profileName: string;
+	    sourceDir: string;
+	    copiedFiles: number;
+	    skippedFiles: number;
+	    message: string;
+
+	    static createFrom(source: any = {}) {
+	        return new ChromeUserDataImportResult(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.cancelled = source["cancelled"];
+	        this.profileId = source["profileId"];
+	        this.profileName = source["profileName"];
+	        this.sourceDir = source["sourceDir"];
+	        this.copiedFiles = source["copiedFiles"];
+	        this.skippedFiles = source["skippedFiles"];
+	        this.message = source["message"];
 	    }
 	}
 	export class CookieInfo {
@@ -1317,6 +1341,7 @@ export namespace config {
 	export class BrowserBookmark {
 	    name: string;
 	    url: string;
+	    folder: string;
 	    openOnStart: boolean;
 	
 	    static createFrom(source: any = {}) {
@@ -1327,6 +1352,7 @@ export namespace config {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.name = source["name"];
 	        this.url = source["url"];
+	        this.folder = source["folder"];
 	        this.openOnStart = source["openOnStart"];
 	    }
 	}
@@ -1633,4 +1659,3 @@ export namespace proxy {
 	}
 
 }
-

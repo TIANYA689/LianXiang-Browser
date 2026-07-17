@@ -142,6 +142,10 @@ export function BookmarkSyncToProfiles() {
   return window['go']['main']['App']['BookmarkSyncToProfiles']();
 }
 
+export function BrowserChromeUserDataImport(arg1) {
+  return window['go']['main']['App']['BrowserChromeUserDataImport'](arg1);
+}
+
 export function BrowserClearCookies(arg1) {
   return window['go']['main']['App']['BrowserClearCookies'](arg1);
 }

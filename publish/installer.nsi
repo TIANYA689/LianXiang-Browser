@@ -1,10 +1,10 @@
-; 链享浏览器 NSIS Installer Script
-; Usage: makensis /DVERSION=1.3.0 /DSTAGINGDIR=C:\path\to\staging installer.nsi
+﻿; 链享浏览器 NSIS Installer Script
+; Usage: makensis /DVERSION=1.4.1 /DSTAGINGDIR=C:\path\to\staging installer.nsi
 
 Unicode True
 
 !ifndef VERSION
-  !define VERSION "1.3.0"
+  !define VERSION "1.4.1"
 !endif
 !ifndef STAGINGDIR
   !define STAGINGDIR "..\publish\staging"
@@ -13,12 +13,24 @@ Unicode True
 !define PRODUCT_NAME    "链享浏览器"
 !define PRODUCT_EXE     "lianxiang-browser.exe"
 !define PRODUCT_ICON    "LianXiangBrowser.ico"
+!define COMPANY_NAME    "链享浏览器"
+!define LEGAL_COPYRIGHT "Copyright © 2026"
 !define UNINSTALL_KEY   "Software\Microsoft\Windows\CurrentVersion\Uninstall\LianXiangBrowser"
 !define INSTALL_DIR     "$PROGRAMFILES64\链享浏览器"
 !define POWERSHELL_EXE  "$SYSDIR\WindowsPowerShell\v1.0\powershell.exe"
 
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
+
+VIProductVersion "${VERSION}.0"
+VIFileVersion "${VERSION}.0"
+VIAddVersionKey /LANG=2052 "CompanyName" "${COMPANY_NAME}"
+VIAddVersionKey /LANG=2052 "FileDescription" "${PRODUCT_NAME} 安装程序"
+VIAddVersionKey /LANG=2052 "FileVersion" "${VERSION}"
+VIAddVersionKey /LANG=2052 "LegalCopyright" "${LEGAL_COPYRIGHT}"
+VIAddVersionKey /LANG=2052 "OriginalFilename" "LianXiang-Browser-Setup-${VERSION}.exe"
+VIAddVersionKey /LANG=2052 "ProductName" "${PRODUCT_NAME}"
+VIAddVersionKey /LANG=2052 "ProductVersion" "${VERSION}"
 
 !macro WriteCloseProcessScript HANDLE
   FileWrite ${HANDLE} "param([string]$$InstallDir, [string]$$ExcludePath)$\r$\n"

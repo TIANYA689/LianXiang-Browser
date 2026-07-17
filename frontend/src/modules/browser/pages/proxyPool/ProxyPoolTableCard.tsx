@@ -177,18 +177,21 @@ export function ProxyPoolTableCard({
         />
       ),
     },
-    { key: 'proxyName', title: '代理名称', width: '180px', sortable: true },
+    {
+      key: 'proxyName',
+      title: '代理名称',
+      sortable: true,
+      render: (value) => <span className="block max-w-[180px] truncate" title={String(value || '')}>{value}</span>,
+    },
     {
       key: 'groupName',
       title: '分组',
-      width: '100px',
       sortable: true,
       render: (value) => value ? <span className="px-1.5 py-0.5 text-xs rounded bg-[var(--color-accent)]/10 text-[var(--color-accent)]">{value}</span> : '-',
     },
     {
       key: 'source',
       title: '来源',
-      width: '180px',
       render: (_, record) => {
         if (!record.sourceUrl) return '-'
         const host = sourceHostLabel(record.sourceUrl)
@@ -202,20 +205,23 @@ export function ProxyPoolTableCard({
         )
       },
     },
-    { key: 'type', title: '类型', width: '90px', sortable: true },
-    { key: 'server', title: '服务器', width: '180px', sortable: true },
-    { key: 'port', title: '端口', width: '80px', sortable: true, render: (value) => value || '-' },
+    { key: 'type', title: '类型', sortable: true },
+    {
+      key: 'server',
+      title: '服务器',
+      sortable: true,
+      render: (value) => <span className="block max-w-[200px] truncate" title={String(value || '')}>{value || '-'}</span>,
+    },
+    { key: 'port', title: '端口', sortable: true, render: (value) => value || '-' },
     {
       key: 'latency',
       title: '延迟',
-      width: '90px',
       sortable: true,
       render: (_, record) => renderLatency(record),
     },
     {
       key: 'latencyEngine',
       title: '测速类型',
-      width: '90px',
       render: (_, record) => renderLatencyEngine(record),
     },
     {
@@ -228,19 +234,18 @@ export function ProxyPoolTableCard({
           </div>
         </div>
       ),
-      width: '280px',
       render: (_, record) => renderIPHealth(record),
     },
     {
       key: 'actions',
       title: '操作',
-      width: '380px',
+      align: 'right',
       render: (_, record) => {
         const isBuiltin = BUILTIN_PROXY_IDS.has(record.proxyId)
         const sourceId = record.sourceId || ''
         const hasSource = !!sourceId && !!record.sourceUrl
         return (
-          <div className="flex gap-2">
+          <div className="flex min-w-max flex-nowrap justify-end gap-2 whitespace-nowrap">
             {hasSource && (
               <Button
                 size="sm"
@@ -328,7 +333,7 @@ export function ProxyPoolTableCard({
 
   return (
     <Card>
-      <div className="flex items-center gap-3 mb-4">
+      <div className="mb-4 flex flex-wrap items-center gap-3">
         <Input
           value={filterKeyword}
           onChange={event => onFilterKeywordChange(event.target.value)}
@@ -381,33 +386,34 @@ export function ProxyPoolTableCard({
           />
           <span className="text-xs text-[var(--color-text-muted)]">分钟</span>
         </div>
-        <div className="flex-1" />
-        {data.length > 0 && (
-          <label className="flex items-center gap-1.5 text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
-            <input
-              type="checkbox"
-              checked={allFilteredSelected}
-              ref={(element) => {
-                if (element) {
-                  element.indeterminate = someFilteredSelected && !allFilteredSelected
-                }
-              }}
-              onChange={onToggleAll}
-              className="w-4 h-4 rounded border-[var(--color-border-default)] accent-[var(--color-accent)] cursor-pointer"
-            />
-            全选
-          </label>
-        )}
-        {selectedCount > 0 && (
-          <>
-            <Button size="sm" variant="secondary" onClick={onWarmupSelected} loading={warmingAllBridges}>
-              预热所选 ({selectedCount})
-            </Button>
-            <Button size="sm" variant="danger" onClick={onOpenBatchDelete}>
-              删除所选 ({selectedCount})
-            </Button>
-          </>
-        )}
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+          {data.length > 0 && (
+            <label className="flex items-center gap-1.5 whitespace-nowrap text-sm text-[var(--color-text-muted)] cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={allFilteredSelected}
+                ref={(element) => {
+                  if (element) {
+                    element.indeterminate = someFilteredSelected && !allFilteredSelected
+                  }
+                }}
+                onChange={onToggleAll}
+                className="w-4 h-4 rounded border-[var(--color-border-default)] accent-[var(--color-accent)] cursor-pointer"
+              />
+              全选
+            </label>
+          )}
+          {selectedCount > 0 && (
+            <>
+              <Button size="sm" variant="secondary" onClick={onWarmupSelected} loading={warmingAllBridges}>
+                预热所选 ({selectedCount})
+              </Button>
+              <Button size="sm" variant="danger" onClick={onOpenBatchDelete}>
+                删除所选 ({selectedCount})
+              </Button>
+            </>
+          )}
+        </div>
       </div>
       <Table
         columns={columns}
@@ -418,6 +424,7 @@ export function ProxyPoolTableCard({
         sortColumn={sortColumn}
         sortOrder={sortOrder}
         onSort={onSort}
+        density="compact"
       />
     </Card>
   )

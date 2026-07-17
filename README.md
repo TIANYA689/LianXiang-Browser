@@ -2,7 +2,7 @@
 
 链享浏览器是一款用于管理独立浏览器环境、代理出口、浏览器内核和自动化任务的本地桌面应用。
 
-当前版本：`1.3.0`  
+当前版本：`1.4.1`
 主要技术：Go、Wails、React、TypeScript  
 当前已验证平台：Windows amd64
 
@@ -40,6 +40,14 @@
 - 独立保存浏览器用户数据目录
 - 配置启动参数、指纹参数、标签、分组和快捷启动码
 - 导入、导出实例配置及用户数据
+- 直接导入 Chrome 的 `--user-data-dir` 目录，并作为普通实例继续编辑指纹、代理和内核
+
+### 默认书签
+
+- 手动添加未分组书签或书签分组
+- 使用 `工作/AI` 形式维护多级书签目录
+- 导入 Chrome、Edge、Firefox 导出的 HTML 书签文件，并保留原目录结构
+- 按 URL 自动跳过重复项，可增量同步到已有未运行实例
 
 ### 代理与网络
 
@@ -112,7 +120,7 @@ build\bin\bin\sing-box.exe
 
 1. 在“内核管理”中添加可用的 Chromium/Chrome 内核。
 2. 在“代理池配置”中导入代理并执行测速。
-3. 在“实例列表”中新建浏览器实例。
+3. 在“实例列表”中新建浏览器实例，或导入已有 Chrome 用户数据。
 4. 为实例选择内核、代理、标签和启动参数。
 5. 启动实例并检查代理出口是否符合预期。
 6. 需要批量操作时，再进入“自动化脚本”配置运行环境和任务。
@@ -130,6 +138,31 @@ chrome\
 也可以在应用的“内核管理”页面中配置其他本地路径。指纹 Chromium 可参考：
 
 <https://github.com/adryfish/fingerprint-chromium>
+
+### 导入现有 Chrome 用户数据
+
+如果 Chrome 通过独立用户目录启动，例如：
+
+```powershell
+& 'C:\Program Files\Google\Chrome\Application\chrome.exe' --user-data-dir='D:\Gugeduo\5'
+```
+
+可以把这个目录直接复制为链享浏览器实例：
+
+1. 关闭所有使用该用户数据目录的 Chrome 窗口。
+2. 打开“实例列表”，点击“导入”。
+3. 选择“Chrome 用户数据目录”，按需填写新实例名称。
+4. 选择完整的 `D:\Gugeduo\5`，不要只选择其中的 `Default` 文件夹。
+5. 导入完成后，可像普通实例一样编辑指纹、代理、内核和启动参数。
+
+导入规则：
+
+- 源目录必须包含 `Local State`，并至少包含一个有效的 `Default` 或 `Profile *` 配置目录。
+- 系统会复制数据为新的独立实例，不会让链享浏览器与原 Chrome 同时写入源目录。
+- 复制时会跳过缓存、临时文件、`Singleton*` 锁文件和其他无需迁移的运行态文件。
+- 如果检测到源目录仍被 Chrome 占用，导入会停止并要求先关闭对应窗口。
+- 书签、扩展、历史记录和可用的登录数据会随目录复制；受 Chrome 或 Windows 加密保护的数据可能仍受当前系统用户和浏览器内核限制。
+- 修改导入实例的指纹并保存时，应用会提醒网站可能将其识别为新设备，并触发风控验证、退出登录或要求重新登录。
 
 ## Launch API 鉴权
 
@@ -268,6 +301,7 @@ wails.json     Wails 应用与产品信息
 ## 数据与隐私
 
 - 浏览器实例数据、SQLite 数据库和自动化运行记录默认保存在本地 `data/`。
+- Chrome 用户数据导入会在实例数据根目录下创建独立副本；原始 `--user-data-dir` 不会被修改。
 - `.env`、账号、Cookie、Token、代理订阅和本地敏感配置已列入 `.gitignore`。
 - 不要把真实 API Key、账号、代理凭据或浏览器用户数据提交到代码仓库。
 - 分享日志、截图、数据库或导出包前，应先检查账号、IP、Cookie、Token 和个人身份信息。
@@ -277,6 +311,7 @@ wails.json     Wails 应用与产品信息
 - 当前二开版本仅完成 Windows amd64 的完整构建和启动验证。
 - Linux/macOS 代码和发布脚本继承自上游，但本次二开尚未重新完成全平台打包验证。
 - 当前没有随项目提供可直接使用的浏览器内核，需要用户自行配置。
+- Chrome 加密的 Cookie、密码或令牌可能与 Windows 用户、Chrome 安装或安全机制绑定，复制目录不保证所有登录状态都能跨内核继续使用。
 - Xray、sing-box 以及用户选择的 Chromium 内核属于第三方二进制，需要独立确认来源和安全性。
 - Windows 可执行文件当前未进行代码签名，系统可能显示未知发布者提示。
 
@@ -286,9 +321,9 @@ wails.json     Wails 应用与产品信息
 
 - 项目仓库：<https://github.com/YuZangA/LianXiang-Browser>
 - Releases：<https://github.com/YuZangA/LianXiang-Browser/releases>
-- 当前版本：<https://github.com/YuZangA/LianXiang-Browser/releases/tag/v1.3.0>
+- 当前版本：<https://github.com/YuZangA/LianXiang-Browser/releases/tag/v1.4.1>
 
-当前 `v1.3.0` 已提供 Windows amd64 便携版。Linux 和 macOS 脚本已保留，但对应产物需要在各自平台完成构建验证后再上传。
+当前源码版本为 `v1.4.1`，Windows amd64 安装包和便携包可通过本仓库发布脚本生成。Linux 和 macOS 脚本已保留，但对应产物需要在各自平台完成构建验证后再上传。
 
 建议的首次上传流程：
 
@@ -307,11 +342,11 @@ git push -u origin main
 ```powershell
 git switch main
 git pull
-git tag -a v1.3.0 -m 'LianXiang Browser v1.3.0'
-git push origin v1.3.0
+git tag -a v1.4.1 -m 'LianXiang Browser v1.4.1'
+git push origin v1.4.1
 ```
 
-然后在你自己的 GitHub 仓库中进入 `Releases`，选择刚推送的 `v1.3.0` 标签创建发布，并上传构建产物。
+然后在你自己的 GitHub 仓库中进入 `Releases`，选择刚推送的 `v1.4.1` 标签创建发布，并上传构建产物。
 
 Windows 发布：
 
@@ -363,6 +398,8 @@ git push -u origin feature/profile-docs
 
 - [安全审计记录](SECURITY_AUDIT.md)
 - [更新记录](CHANGELOG.md)
+- [v1.4.1 发布说明](publish/RELEASE_NOTES-1.4.1.md)
+- [v1.4.0 发布说明](publish/RELEASE_NOTES-1.4.0.md)
 - [Windows 脚本说明](bat/README.md)
 - [Linux 发布说明](publish/linux/README.md)
 - [macOS 发布说明](publish/mac/README.md)

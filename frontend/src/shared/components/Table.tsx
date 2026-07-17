@@ -31,6 +31,7 @@ interface TableProps<T> {
   onSort?: (sorterResult: SorterResult) => void // 排序变化回调
   sortColumn?: string // 当前排序的列
   sortOrder?: SortOrder // 当前排序方式
+  density?: 'normal' | 'compact'
 }
 
 export function Table<T extends Record<string, any>>({
@@ -46,7 +47,9 @@ export function Table<T extends Record<string, any>>({
   onSort,
   sortColumn,
   sortOrder,
+  density = 'normal',
 }: TableProps<T>) {
+  const compact = density === 'compact'
   const getRowKey = (record: T, index: number): string => {
     if (typeof rowKey === 'function') {
       return rowKey(record)
@@ -110,7 +113,8 @@ export function Table<T extends Record<string, any>>({
               <th
                 key={col.key}
                 className={clsx(
-                  'px-4 py-3 text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider bg-[var(--color-bg-muted)]',
+                  'text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider bg-[var(--color-bg-muted)] whitespace-nowrap',
+                  compact ? 'px-3 py-2.5' : 'px-4 py-3',
                   col.align === 'center' && 'text-center',
                   col.align === 'right' && 'text-right',
                   !col.align && 'text-left',
@@ -119,7 +123,11 @@ export function Table<T extends Record<string, any>>({
                 style={{ width: col.width }}
                 onClick={() => col.sortable && handleSortClick(col)}
               >
-                <span className="flex items-center">
+                <span className={clsx(
+                  'flex items-center whitespace-nowrap',
+                  col.align === 'center' && 'justify-center',
+                  col.align === 'right' && 'justify-end'
+                )}>
                   {col.title}
                   {renderSortIcon(col)}
                 </span>
@@ -155,7 +163,8 @@ export function Table<T extends Record<string, any>>({
                   <td
                     key={col.key}
                     className={clsx(
-                      'px-4 py-3.5 text-sm text-[var(--color-text-secondary)]',
+                      'align-middle text-sm text-[var(--color-text-secondary)] whitespace-nowrap',
+                      compact ? 'px-3 py-3' : 'px-4 py-3.5',
                       col.align === 'center' && 'text-center',
                       col.align === 'right' && 'text-right'
                     )}

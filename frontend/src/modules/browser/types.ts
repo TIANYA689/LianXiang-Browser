@@ -57,6 +57,16 @@ export interface BrowserProfilePackageImportResult {
   message: string
 }
 
+export interface ChromeUserDataImportResult {
+  cancelled: boolean
+  profileId: string
+  profileName: string
+  sourceDir: string
+  copiedFiles: number
+  skippedFiles: number
+  message: string
+}
+
 export type BrowserProfileCopyMode = 'auto_fingerprint' | 'regular'
 
 export type BrowserProfileAutomationTarget =
@@ -303,6 +313,7 @@ export interface SnapshotInfo {
 export interface BrowserBookmark {
   name: string
   url: string
+  folder?: string
   openOnStart?: boolean
 }
 

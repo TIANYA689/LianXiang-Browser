@@ -103,13 +103,17 @@ bat\publish.bat
 bat\publish.bat W
 bat\publish.bat L
 bat\publish.bat B
-bat\publish.bat W -Version 1.1.0
-bat\publish.bat B -Version 1.1.0
+bat\publish.bat zip -Version 1.4.1
+bat\publish.bat both -Version 1.4.1
+bat\publish.bat W -Version 1.4.1 -WindowsFormat BOTH
+bat\publish.bat B -Version 1.4.1 -WindowsFormat BOTH
 ```
 
 说明：
 
-- `-Version 1.1.0` 会覆盖本次发布使用的版本号。
+- `zip` / `portable` 仅生成 Windows 便携 ZIP，`both` 同时生成 Windows 安装包和便携 ZIP。
+- `-Version 1.4.1` 会覆盖本次发布使用的版本号；未传时读取 `wails.json`。
+- `-WindowsFormat` 支持 `INSTALLER`、`PORTABLE`、`BOTH`。
 - Windows / Linux 包名、NSIS 安装包版本号，以及本次构建期间读取到的 `wails.json productVersion` 会统一使用该值。
 
 Windows 打包依赖 NSIS，默认查找顺序：
@@ -118,8 +122,12 @@ Windows 打包依赖 NSIS，默认查找顺序：
 MAKENSIS_PATH -> 直接指向 makensis.exe
 NSIS_PATH     -> NSIS 目录或 makensis.exe
 NSIS_HOME     -> NSIS 安装目录
+项目本地      -> .local-tools\nsis\makensis.exe
+                 .local-tools\nsis\Bin\makensis.exe
 PATH          -> where makensis.exe
 ```
+
+如果系统策略拦截直接下载或运行 NSIS 官方安装器，可将 NSIS 解压或定向安装到项目的 `.local-tools\nsis`。发布脚本会自动识别该目录，不需要全局安装或修改系统 `PATH`；`.local-tools` 已被 Git 忽略。
 
 默认兜底目录：
 
@@ -142,6 +150,7 @@ Windows 分支使用的项目路径：
 
 输出：
 - publish\output\LianXiang-Browser-Setup-<version>.exe
+- publish\output\LianXiang-Browser-<version>-windows-amd64-portable.zip
 ```
 
 说明：
@@ -177,6 +186,7 @@ Windows 产物：
 
 ```text
 publish\output\LianXiang-Browser-Setup-<version>.exe
+publish\output\LianXiang-Browser-<version>-windows-amd64-portable.zip
 ```
 
 ### `recover-profiles.ps1`

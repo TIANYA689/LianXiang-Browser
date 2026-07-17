@@ -5,11 +5,12 @@ import { BrowserCoreEditorModal, BrowserListHeader, BrowserListSettingsModal } f
 import { BatchToolbar } from '../components/BrowserListWidgets'
 import { BrowserProfilesPanel } from '../components/BrowserProfilesPanel'
 import { BrowserBackupModal } from '../components/BrowserBackupModal'
+import { BrowserImportModal } from '../components/BrowserImportModal'
 import { ProxyPickerModal } from '../components/ProxyPickerModal'
 import { ProfileExtensionModal } from '../components/ProfileExtensionModal'
 import { createBrowserProfileCopyOptions, isBrowserProfileCopyOptionsValid } from '../copyOptions'
 import { buildBrowserProfileCopyName } from '../copyName'
-import { resolveActionFeedback } from '../utils/actionErrors'
+import { resolveActionErrorMessage, resolveActionFeedback } from '../utils/actionErrors'
 import { BrowserListDialogs } from './browserList/BrowserListDialogs'
 import { useBrowserListDerived, useBrowserListViewState } from './browserList/useBrowserListViewState'
 import { useBrowserListSettings } from './browserList/useBrowserListSettings'
@@ -22,6 +23,7 @@ import {
   exportBrowserProfilePackage,
   fetchBrowserProfileTrash,
   importBrowserProfilePackage,
+  importChromeUserData,
   permanentlyDeleteBrowserProfile,
   restoreBrowserProfile,
   startBrowserInstance,
@@ -48,6 +50,7 @@ export function BrowserListPage() {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [batchLoading, setBatchLoading] = useState(false)
   const [profilePackageBusy, setProfilePackageBusy] = useState(false)
+  const [importModalOpen, setImportModalOpen] = useState(false)
   const [backupModalOpen, setBackupModalOpen] = useState(false)
   const [backupLoadingMode, setBackupLoadingMode] = useState<BackupLoadingMode>('none')
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -316,9 +319,27 @@ export function BrowserListPage() {
         toast.success(`已导入 ${result.importedCount} 个实例`)
       }
       setSelectedIds(new Set())
+      setImportModalOpen(false)
       await loadProfiles()
     } catch (error: any) {
       toast.error(error?.message || '导入实例失败')
+    } finally {
+      setProfilePackageBusy(false)
+    }
+  }
+
+  const handleImportChromeUserData = async (profileName: string) => {
+    if (profilePackageBusy) return
+    setProfilePackageBusy(true)
+    try {
+      const result = await importChromeUserData(profileName)
+      if (result.cancelled) return
+      toast.success(`已导入 Chrome 数据：${result.profileName}（${result.copiedFiles} 个文件）`)
+      setSelectedIds(new Set())
+      setImportModalOpen(false)
+      await loadProfiles()
+    } catch (error: any) {
+      toast.error(resolveActionErrorMessage(error, '导入 Chrome 用户数据失败'))
     } finally {
       setProfilePackageBusy(false)
     }
@@ -519,7 +540,7 @@ export function BrowserListPage() {
         onRefresh={() => { void loadProfiles() }}
         onOpenSettings={handleOpenSettings}
         onOpenTrash={openTrashModal}
-        onImportProfiles={handleImportProfiles}
+        onOpenImport={() => setImportModalOpen(true)}
         onOpenBackup={() => setBackupModalOpen(true)}
         importingProfiles={profilePackageBusy}
         onViewModeChange={setViewMode}
@@ -551,6 +572,14 @@ export function BrowserListPage() {
         onExportFull={() => { void handleExportFullBackup() }}
         onImportMerge={() => { void handleImportFullBackup(false) }}
         onImportReset={() => { void handleImportFullBackup(true) }}
+      />
+
+      <BrowserImportModal
+        open={importModalOpen}
+        busy={profilePackageBusy}
+        onClose={() => setImportModalOpen(false)}
+        onImportChrome={(profileName) => { void handleImportChromeUserData(profileName) }}
+        onImportPackage={() => { void handleImportProfiles() }}
       />
 
       <BrowserProfilesPanel

@@ -204,6 +204,13 @@ var migrations = []migration{
 			`ALTER TABLE browser_proxies ADD COLUMN preferred_kernel TEXT NOT NULL DEFAULT ''`,
 		},
 	},
+	{
+		version: 13,
+		desc:    "书签表添加分组字段",
+		stmts: []string{
+			`ALTER TABLE browser_bookmarks ADD COLUMN folder TEXT NOT NULL DEFAULT ''`,
+		},
+	},
 	// ── 新版本在此追加，格式：
 	// {
 	//     version: 4,

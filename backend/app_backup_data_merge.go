@@ -1,8 +1,8 @@
 package backend
 
 import (
-	"lianxiang-browser/backend/internal/config"
 	"fmt"
+	"lianxiang-browser/backend/internal/config"
 	"os"
 	"path/filepath"
 	"strings"
@@ -151,10 +151,10 @@ WHERE NOT EXISTS (
 		},
 		{
 			name: "browser_bookmarks",
-			insertAll: `INSERT INTO browser_bookmarks (name, url, sort_order)
-SELECT name, url, sort_order FROM src.browser_bookmarks`,
-			insertSafe: `INSERT INTO browser_bookmarks (name, url, sort_order)
-SELECT s.name, s.url, s.sort_order
+			insertAll: `INSERT INTO browser_bookmarks (name, url, folder, open_on_start, sort_order)
+SELECT name, url, '', 0, sort_order FROM src.browser_bookmarks`,
+			insertSafe: `INSERT INTO browser_bookmarks (name, url, folder, open_on_start, sort_order)
+SELECT s.name, s.url, '', 0, s.sort_order
 FROM src.browser_bookmarks s
 WHERE NOT EXISTS (
   SELECT 1 FROM browser_bookmarks t WHERE lower(t.url) = lower(s.url)
@@ -233,18 +233,32 @@ WHERE NOT EXISTS (
 			if err != nil {
 				return err
 			}
+			hasFolder, err := backupSrcColumnExists(tx, item.name, "folder")
+			if err != nil {
+				return err
+			}
+			columnPrefix := ""
+			if !resetFirst {
+				columnPrefix = "s."
+			}
+			openExpr := "0"
+			folderExpr := "''"
 			if hasOpenOnStart {
-				if resetFirst {
-					sqlText = `INSERT INTO browser_bookmarks (name, url, open_on_start, sort_order)
-SELECT name, url, COALESCE(open_on_start,0), sort_order FROM src.browser_bookmarks`
-				} else {
-					sqlText = `INSERT INTO browser_bookmarks (name, url, open_on_start, sort_order)
-SELECT s.name, s.url, COALESCE(s.open_on_start,0), s.sort_order
+				openExpr = "COALESCE(" + columnPrefix + "open_on_start,0)"
+			}
+			if hasFolder {
+				folderExpr = "COALESCE(" + columnPrefix + "folder,'')"
+			}
+			if resetFirst {
+				sqlText = fmt.Sprintf(`INSERT INTO browser_bookmarks (name, url, folder, open_on_start, sort_order)
+SELECT name, url, %s, %s, sort_order FROM src.browser_bookmarks`, folderExpr, openExpr)
+			} else {
+				sqlText = fmt.Sprintf(`INSERT INTO browser_bookmarks (name, url, folder, open_on_start, sort_order)
+SELECT s.name, s.url, %s, %s, s.sort_order
 FROM src.browser_bookmarks s
 WHERE NOT EXISTS (
   SELECT 1 FROM browser_bookmarks t WHERE lower(t.url) = lower(s.url)
-)`
-				}
+				)`, folderExpr, openExpr)
 			}
 		}
 		res, err := tx.Exec(sqlText)

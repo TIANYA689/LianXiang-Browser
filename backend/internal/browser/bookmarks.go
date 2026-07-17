@@ -1,11 +1,12 @@
 package browser
 
 import (
-	"lianxiang-browser/backend/internal/config"
 	"encoding/json"
 	"fmt"
+	"lianxiang-browser/backend/internal/config"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 )
 
@@ -49,27 +50,32 @@ func EnsureDefaultBookmarks(userDataDir string, bookmarks []config.BrowserBookma
 	// 计算当前最大 id，用于分配新 id
 	maxID := findMaxID(root)
 
-	// 把不存在的默认书签追加进去
+	// 把不存在的默认书签追加到书签栏或指定的分组目录中。
 	added := false
 	for _, b := range bookmarks {
-		if b.Name == "" || b.URL == "" {
+		name := strings.TrimSpace(b.Name)
+		url := strings.TrimSpace(b.URL)
+		if name == "" || url == "" {
 			continue
 		}
-		if existingURLs[b.URL] {
+		urlKey := strings.ToLower(url)
+		if existingURLs[urlKey] {
 			continue
 		}
 		maxID++
-		barChildren = append(barChildren, map[string]interface{}{
+		bookmarkNode := map[string]interface{}{
 			"date_added":     now,
 			"date_last_used": "0",
-			"guid":           bookmarkGUID(b.URL),
+			"guid":           bookmarkGUID(url),
 			"id":             fmt.Sprintf("%d", maxID),
 			"meta_info":      map[string]string{"power_bookmark_meta": ""},
-			"name":           b.Name,
+			"name":           name,
 			"type":           "url",
-			"url":            b.URL,
-		})
-		existingURLs[b.URL] = true
+			"url":            url,
+		}
+		folderParts := bookmarkFolderParts(b.Folder)
+		barChildren, maxID = appendBookmarkNode(barChildren, folderParts, bookmarkNode, now, maxID, "")
+		existingURLs[urlKey] = true
 		added = true
 	}
 
@@ -192,7 +198,7 @@ func collectURLs(nodes []interface{}, out map[string]bool) {
 		}
 		if node["type"] == "url" {
 			if u, ok := node["url"].(string); ok {
-				out[u] = true
+				out[strings.ToLower(strings.TrimSpace(u))] = true
 			}
 		} else if node["type"] == "folder" {
 			if sub, ok := node["children"].([]interface{}); ok {
@@ -200,6 +206,72 @@ func collectURLs(nodes []interface{}, out map[string]bool) {
 			}
 		}
 	}
+}
+
+func bookmarkFolderParts(folder string) []string {
+	parts := strings.FieldsFunc(folder, func(r rune) bool {
+		return r == '/' || r == '\\'
+	})
+	clean := make([]string, 0, len(parts))
+	for _, part := range parts {
+		if part = strings.TrimSpace(part); part != "" {
+			clean = append(clean, part)
+		}
+	}
+	return clean
+}
+
+// appendBookmarkNode 递归查找或创建文件夹，并把书签写到叶子目录。
+// 返回更新后的 children 和最新的最大数字 id。
+func appendBookmarkNode(
+	children []interface{},
+	folders []string,
+	bookmarkNode map[string]interface{},
+	now string,
+	maxID int,
+	parentPath string,
+) ([]interface{}, int) {
+	if len(folders) == 0 {
+		return append(children, bookmarkNode), maxID
+	}
+
+	folderName := folders[0]
+	folderPath := folderName
+	if parentPath != "" {
+		folderPath = parentPath + "/" + folderName
+	}
+
+	for index, rawChild := range children {
+		folder, ok := rawChild.(map[string]interface{})
+		if !ok || folder["type"] != "folder" {
+			continue
+		}
+		name, _ := folder["name"].(string)
+		if !strings.EqualFold(strings.TrimSpace(name), folderName) {
+			continue
+		}
+		subChildren, _ := folder["children"].([]interface{})
+		updated, nextMaxID := appendBookmarkNode(subChildren, folders[1:], bookmarkNode, now, maxID, folderPath)
+		folder["children"] = updated
+		folder["date_modified"] = now
+		children[index] = folder
+		return children, nextMaxID
+	}
+
+	maxID++
+	newFolder := map[string]interface{}{
+		"children":       []interface{}{},
+		"date_added":     now,
+		"date_last_used": "0",
+		"date_modified":  now,
+		"guid":           bookmarkGUID("folder:" + folderPath),
+		"id":             fmt.Sprintf("%d", maxID),
+		"name":           folderName,
+		"type":           "folder",
+	}
+	updated, nextMaxID := appendBookmarkNode([]interface{}{}, folders[1:], bookmarkNode, now, maxID, folderPath)
+	newFolder["children"] = updated
+	return append(children, newFolder), nextMaxID
 }
 
 // findMaxID 遍历整个书签树找到最大数字 id

@@ -26,7 +26,7 @@ interface BrowserListHeaderProps {
   onRefresh: () => void
   onOpenSettings: () => void
   onOpenTrash: () => void
-  onImportProfiles: () => void
+  onOpenImport: () => void
   onOpenBackup: () => void
   importingProfiles?: boolean
   onViewModeChange: (next: BrowserViewMode) => void
@@ -48,7 +48,7 @@ export function BrowserListHeader({
   onRefresh,
   onOpenSettings,
   onOpenTrash,
-  onImportProfiles,
+  onOpenImport,
   onOpenBackup,
   importingProfiles = false,
   onViewModeChange,
@@ -96,8 +96,8 @@ export function BrowserListHeader({
           <Button variant="secondary" size="sm" onClick={onOpenTrash}>
             <Trash2 className="w-4 h-4" />回收站
           </Button>
-          <Button variant="secondary" size="sm" onClick={onImportProfiles} loading={importingProfiles}>
-            <Upload className="w-4 h-4" />导入实例
+          <Button variant="secondary" size="sm" onClick={onOpenImport} loading={importingProfiles}>
+            <Upload className="w-4 h-4" />导入
           </Button>
           <Button variant="secondary" size="sm" onClick={onOpenBackup}>
             <Archive className="w-4 h-4" />备份

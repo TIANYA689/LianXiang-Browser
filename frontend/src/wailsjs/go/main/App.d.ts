@@ -80,6 +80,8 @@ export function BookmarkSave(arg1:Array<config.BrowserBookmark>):Promise<void>;
 
 export function BookmarkSyncToProfiles():Promise<backend.BookmarkSyncResult>;
 
+export function BrowserChromeUserDataImport(arg1:string):Promise<backend.ChromeUserDataImportResult>;
+
 export function BrowserClearCookies(arg1:string):Promise<void>;
 
 export function BrowserCoreDelete(arg1:string):Promise<void>;
