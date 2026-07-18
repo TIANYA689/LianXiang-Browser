@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 )
 
 func TestEnsureDefaultBookmarksCreatesNestedFolders(t *testing.T) {
@@ -70,6 +71,63 @@ func TestEnsureDefaultBookmarksDoesNotDuplicateExistingURLInOtherRoot(t *testing
 	root = readBookmarkRoot(t, userDataDir)
 	if got := countRootBookmarkURL(root, "https://example.com/"); got != 1 {
 		t.Fatalf("重复 URL 数量 = %d，期望 1", got)
+	}
+}
+
+func TestSyncDefaultBookmarksRemovesOnlyManagedDisabledBookmark(t *testing.T) {
+	userDataDir := t.TempDir()
+	managed := []config.BrowserBookmark{
+		{Name: "Managed", URL: "https://managed.example/"},
+	}
+	if err := SyncDefaultBookmarks(userDataDir, managed, managed); err != nil {
+		t.Fatalf("initial sync failed: %v", err)
+	}
+
+	if err := SyncDefaultBookmarks(userDataDir, managed, nil); err != nil {
+		t.Fatalf("disable sync failed: %v", err)
+	}
+
+	root := readBookmarkRoot(t, userDataDir)
+	urls := collectRootURLs(root)
+	if urls["https://managed.example/"] {
+		t.Fatal("managed bookmark should be removed after it is disabled")
+	}
+}
+
+func TestSyncDefaultBookmarksPreservesUserBookmarkWithSameURL(t *testing.T) {
+	userDataDir := t.TempDir()
+	profileDir := filepath.Join(userDataDir, "Default")
+	if err := os.MkdirAll(profileDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	now := toChromiumTime(time.Now())
+	root := newEmptyBookmarkRoot(now)
+	roots := root["roots"].(map[string]interface{})
+	other := roots["other"].(map[string]interface{})
+	other["children"] = []interface{}{map[string]interface{}{
+		"date_added": now,
+		"guid":       "user-created-guid",
+		"id":         "4",
+		"name":       "User bookmark",
+		"type":       "url",
+		"url":        "https://same.example/",
+	}}
+	data, err := json.Marshal(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(profileDir, "Bookmarks"), data, 0o644); err != nil {
+		t.Fatal(err)
+	}
+
+	managed := []config.BrowserBookmark{{Name: "Managed", URL: "https://same.example/"}}
+	if err := SyncDefaultBookmarks(userDataDir, managed, nil); err != nil {
+		t.Fatalf("disable sync failed: %v", err)
+	}
+
+	urls := collectRootURLs(readBookmarkRoot(t, userDataDir))
+	if !urls["https://same.example/"] {
+		t.Fatal("user-created bookmark with the same URL must be preserved")
 	}
 }
 

@@ -142,7 +142,7 @@ APP_NAME="链享浏览器"
 APP_SUMMARY="Multi-profile browser launcher with proxy-pool management"
 APP_MAINTAINER="LianXiang Browser Team"
 APP_MAINTAINER_EMAIL="contact@lianxiang.local"
-APP_HOMEPAGE="https://github.com/YuZangA/LianXiang-Browser"
+APP_HOMEPAGE="https://github.com/TIANYA689/LianXiang-Browser"
 BUILD_DATE_UTC="$(date -u +%F)"
 ICON_SIZES=(16 24 32 48 64 128 256 512)
 

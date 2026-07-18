@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Folder, FolderPlus, GripVertical, Plus, RefreshCw, RotateCcw, Trash2, Upload } from 'lucide-react'
-import { Button, Card, ConfirmModal, Input, toast } from '../../../shared/components'
-import type { BrowserBookmark } from '../types'
-import { fetchBookmarks, resetBookmarks, saveBookmarks, syncBookmarksToProfiles } from '../api'
+import { Folder, FolderPlus, GripVertical, Plus, RefreshCw, RotateCcw, Settings2, Trash2, Upload } from 'lucide-react'
+import { Button, Card, ConfirmModal, Input, Modal, Switch, toast } from '../../../shared/components'
+import type { BrowserBookmark, BrowserProfile } from '../types'
+import { fetchBookmarks, fetchBrowserProfiles, resetBookmarks, saveBookmarks, syncBookmarksToProfiles } from '../api'
 import { parseBookmarkHTML } from '../utils/bookmarkImport'
 
 interface BookmarkGroupView {
@@ -12,17 +12,24 @@ interface BookmarkGroupView {
 
 export function BookmarkSettingsPage() {
   const [items, setItems] = useState<BrowserBookmark[]>([])
+  const [profiles, setProfiles] = useState<BrowserProfile[]>([])
   const [saving, setSaving] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [importing, setImporting] = useState(false)
   const [resetOpen, setResetOpen] = useState(false)
   const [syncOpen, setSyncOpen] = useState(false)
   const [dragIndex, setDragIndex] = useState<number | null>(null)
+  const [profileSettingsIndex, setProfileSettingsIndex] = useState<number | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
-    fetchBookmarks().then(setItems)
+    Promise.all([fetchBookmarks(), fetchBrowserProfiles()]).then(([bookmarkList, profileList]) => {
+      setItems(bookmarkList)
+      setProfiles(profileList)
+    })
   }, [])
+
+  const profileSettingsBookmark = profileSettingsIndex === null ? null : items[profileSettingsIndex]
 
   const groups = useMemo<BookmarkGroupView[]>(() => {
     const result: BookmarkGroupView[] = []
@@ -69,6 +76,24 @@ export function BookmarkSettingsPage() {
 
   const handleOpenOnStartChange = (index: number, checked: boolean) => {
     setItems(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, openOnStart: checked } : item))
+  }
+
+  const handleEnabledChange = (index: number, enabled: boolean) => {
+    setItems(prev => prev.map((item, itemIndex) => itemIndex === index ? { ...item, disabled: !enabled } : item))
+  }
+
+  const handleProfileEnabledChange = (profileId: string, enabled: boolean) => {
+    if (profileSettingsIndex === null) return
+    setItems(prev => prev.map((item, itemIndex) => {
+      if (itemIndex !== profileSettingsIndex) return item
+      const disabledProfileIds = new Set(item.disabledProfileIds || [])
+      if (enabled) {
+        disabledProfileIds.delete(profileId)
+      } else {
+        disabledProfileIds.add(profileId)
+      }
+      return { ...item, disabledProfileIds: Array.from(disabledProfileIds) }
+    }))
   }
 
   const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -208,7 +233,7 @@ export function BookmarkSettingsPage() {
       <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
         <div>
           <h1 className="text-xl font-semibold text-[var(--color-text-primary)]">默认书签</h1>
-          <p className="text-sm text-[var(--color-text-muted)] mt-1">新建实例首次启动时写入书签栏，支持多级分组和浏览器 HTML 书签导入</p>
+          <p className="text-sm text-[var(--color-text-muted)] mt-1">管理实例书签，可全局关闭或只对指定实例关闭</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="secondary" size="sm" onClick={() => fileInputRef.current?.click()} loading={importing}>
@@ -266,18 +291,20 @@ export function BookmarkSettingsPage() {
                     onDragStart={() => handleDragStart(index)}
                     onDragOver={event => handleDragOver(event, index)}
                     onDragEnd={handleDragEnd}
-                    className={`flex flex-col gap-2 rounded-xl p-2.5 shadow-[var(--shadow-sm)] transition-all duration-150 lg:flex-row lg:items-center ${
+                    className={`flex flex-col gap-2 rounded-xl p-2.5 shadow-[var(--shadow-sm)] transition-all duration-150 xl:flex-row xl:items-center ${
                       dragIndex === index
                         ? 'bg-[var(--color-accent-muted)] ring-1 ring-[var(--color-border-strong)]'
-                        : 'bg-[var(--color-bg-muted)] hover:bg-[var(--color-bg-subtle)]'
+                        : item.disabled
+                          ? 'bg-[var(--color-bg-muted)] opacity-65'
+                          : 'bg-[var(--color-bg-muted)] hover:bg-[var(--color-bg-subtle)]'
                     }`}
                   >
-                    <GripVertical className="hidden h-4 w-4 shrink-0 cursor-grab text-[var(--color-text-muted)] lg:block" />
+                    <GripVertical className="hidden h-4 w-4 shrink-0 cursor-grab text-[var(--color-text-muted)] xl:block" />
                     <Input
                       value={item.name}
                       onChange={event => handleChange(index, 'name', event.target.value)}
                       placeholder="名称，如 Google"
-                      className="lg:w-44 lg:shrink-0"
+                      className="xl:w-44 xl:shrink-0"
                     />
                     <Input
                       value={item.url}
@@ -285,16 +312,34 @@ export function BookmarkSettingsPage() {
                       placeholder="https://..."
                       className="min-w-0 flex-1"
                     />
-                    <div className="flex items-center justify-between gap-2 lg:justify-start">
+                    <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-start xl:justify-end">
+                      <label className="flex items-center gap-1.5 px-2 text-xs text-[var(--color-text-secondary)] whitespace-nowrap select-none">
+                        <Switch
+                          checked={!item.disabled}
+                          onChange={enabled => handleEnabledChange(index, enabled)}
+                        />
+                        {!item.disabled ? '已启用' : '已关闭'}
+                      </label>
                       <label className="flex items-center gap-1.5 px-2 text-xs text-[var(--color-text-secondary)] whitespace-nowrap select-none">
                         <input
                           type="checkbox"
                           checked={Boolean(item.openOnStart)}
                           onChange={event => handleOpenOnStartChange(index, event.target.checked)}
+                          disabled={Boolean(item.disabled)}
                           className="h-4 w-4 rounded border-[var(--color-border-default)] accent-[var(--color-accent)]"
                         />
                         启动打开
                       </label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setProfileSettingsIndex(index)}
+                        title="设置此书签在哪些实例中关闭"
+                      >
+                        <Settings2 className="h-4 w-4" />
+                        关闭实例{(item.disabledProfileIds || []).length > 0 ? ` ${(item.disabledProfileIds || []).length}` : ''}
+                      </Button>
                       <button
                         type="button"
                         aria-label={`删除书签 ${item.name || index + 1}`}
@@ -352,9 +397,48 @@ export function BookmarkSettingsPage() {
         onClose={() => setSyncOpen(false)}
         onConfirm={handleSync}
         title="手动同步已有实例"
-        content="只会按当前分组增量追加缺失的默认书签，不会删除、改名或移动用户已有书签。运行中的实例会跳过。"
+        content="会追加缺失的默认书签，并移除已关闭且由本应用写入的书签；不会删除用户手工创建的书签。运行中的实例会跳过。"
         confirmText="开始同步"
       />
+
+      <Modal
+        open={profileSettingsIndex !== null}
+        onClose={() => setProfileSettingsIndex(null)}
+        title={`单实例关闭${profileSettingsBookmark?.name ? ` · ${profileSettingsBookmark.name}` : ''}`}
+        width="520px"
+        footer={<Button onClick={() => setProfileSettingsIndex(null)}>完成</Button>}
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-[var(--color-text-secondary)]">
+            关闭后，该书签不会写入所选实例；保存书签后对已停止实例生效。
+          </p>
+          {profileSettingsBookmark?.disabled && (
+            <p className="rounded-lg bg-[var(--color-bg-muted)] px-3 py-2 text-xs text-[var(--color-text-muted)]">
+              当前书签已全局关闭，下面的单实例设置会保留，但暂时不会显示在任何实例中。
+            </p>
+          )}
+          <div className="divide-y divide-[var(--color-border-default)] border-y border-[var(--color-border-default)]">
+            {profiles.map(profile => {
+              const enabled = !(profileSettingsBookmark?.disabledProfileIds || []).includes(profile.profileId)
+              return (
+                <div key={profile.profileId} className="flex items-center justify-between gap-4 py-3">
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-[var(--color-text-primary)]">{profile.profileName || profile.profileId}</p>
+                    <p className="truncate text-xs text-[var(--color-text-muted)]">{profile.launchCode || profile.profileId}</p>
+                  </div>
+                  <label className="flex shrink-0 items-center gap-2 text-sm text-[var(--color-text-secondary)]">
+                    <Switch checked={enabled} onChange={checked => handleProfileEnabledChange(profile.profileId, checked)} />
+                    {enabled ? '显示' : '关闭'}
+                  </label>
+                </div>
+              )
+            })}
+            {profiles.length === 0 && (
+              <p className="py-8 text-center text-sm text-[var(--color-text-muted)]">暂无可配置实例</p>
+            )}
+          </div>
+        </div>
+      </Modal>
     </div>
   )
 }

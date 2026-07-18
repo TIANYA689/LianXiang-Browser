@@ -237,28 +237,44 @@ WHERE NOT EXISTS (
 			if err != nil {
 				return err
 			}
+			hasDisabled, err := backupSrcColumnExists(tx, item.name, "disabled")
+			if err != nil {
+				return err
+			}
+			hasDisabledProfileIDs, err := backupSrcColumnExists(tx, item.name, "disabled_profile_ids")
+			if err != nil {
+				return err
+			}
 			columnPrefix := ""
 			if !resetFirst {
 				columnPrefix = "s."
 			}
 			openExpr := "0"
 			folderExpr := "''"
+			disabledExpr := "0"
+			disabledProfileIDsExpr := "'[]'"
 			if hasOpenOnStart {
 				openExpr = "COALESCE(" + columnPrefix + "open_on_start,0)"
 			}
 			if hasFolder {
 				folderExpr = "COALESCE(" + columnPrefix + "folder,'')"
 			}
+			if hasDisabled {
+				disabledExpr = "COALESCE(" + columnPrefix + "disabled,0)"
+			}
+			if hasDisabledProfileIDs {
+				disabledProfileIDsExpr = "COALESCE(" + columnPrefix + "disabled_profile_ids,'[]')"
+			}
 			if resetFirst {
-				sqlText = fmt.Sprintf(`INSERT INTO browser_bookmarks (name, url, folder, open_on_start, sort_order)
-SELECT name, url, %s, %s, sort_order FROM src.browser_bookmarks`, folderExpr, openExpr)
+				sqlText = fmt.Sprintf(`INSERT INTO browser_bookmarks (name, url, folder, open_on_start, disabled, disabled_profile_ids, sort_order)
+SELECT name, url, %s, %s, %s, %s, sort_order FROM src.browser_bookmarks`, folderExpr, openExpr, disabledExpr, disabledProfileIDsExpr)
 			} else {
-				sqlText = fmt.Sprintf(`INSERT INTO browser_bookmarks (name, url, folder, open_on_start, sort_order)
-SELECT s.name, s.url, %s, %s, s.sort_order
+				sqlText = fmt.Sprintf(`INSERT INTO browser_bookmarks (name, url, folder, open_on_start, disabled, disabled_profile_ids, sort_order)
+SELECT s.name, s.url, %s, %s, %s, %s, s.sort_order
 FROM src.browser_bookmarks s
 WHERE NOT EXISTS (
   SELECT 1 FROM browser_bookmarks t WHERE lower(t.url) = lower(s.url)
-				)`, folderExpr, openExpr)
+				)`, folderExpr, openExpr, disabledExpr, disabledProfileIDsExpr)
 			}
 		}
 		res, err := tx.Exec(sqlText)

@@ -1,9 +1,9 @@
 package backend
 
 import (
+	"fmt"
 	"lianxiang-browser/backend/internal/browser"
 	"lianxiang-browser/backend/internal/logger"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -121,8 +121,9 @@ func (a *App) resolveBrowserStartProfile(input browserStartInput) (*BrowserProfi
 }
 
 func (a *App) prepareBrowserStartPlan(input browserStartInput, profile *BrowserProfile) (*browserStartPlan, error) {
-	bookmarks := a.BookmarkList()
-	sanitizedProfileLaunchArgs, sanitizedExtraLaunchArgs, chromeBinaryPath, userDataDir, err := a.prepareBrowserLaunchContext(input, profile, bookmarks)
+	allBookmarks := a.BookmarkList()
+	bookmarks := bookmarksForProfile(allBookmarks, input.ProfileID)
+	sanitizedProfileLaunchArgs, sanitizedExtraLaunchArgs, chromeBinaryPath, userDataDir, err := a.prepareBrowserLaunchContext(input, profile, allBookmarks, bookmarks)
 	if err != nil {
 		return nil, err
 	}
@@ -176,7 +177,7 @@ func (a *App) prepareBrowserStartPlan(input browserStartInput, profile *BrowserP
 	}, nil
 }
 
-func (a *App) prepareBrowserLaunchContext(input browserStartInput, profile *BrowserProfile, bookmarks []BrowserBookmark) ([]string, []string, string, string, error) {
+func (a *App) prepareBrowserLaunchContext(input browserStartInput, profile *BrowserProfile, allBookmarks, enabledBookmarks []BrowserBookmark) ([]string, []string, string, string, error) {
 	log := logger.New("Browser")
 
 	sanitizedProfileLaunchArgs, managedProfileArgs := sanitizeManagedLaunchArgs(profile.LaunchArgs)
@@ -214,7 +215,7 @@ func (a *App) prepareBrowserLaunchContext(input browserStartInput, profile *Brow
 		return nil, nil, "", "", startErr
 	}
 
-	if err := browser.EnsureDefaultBookmarks(userDataDir, bookmarks); err != nil {
+	if err := browser.SyncDefaultBookmarks(userDataDir, allBookmarks, enabledBookmarks); err != nil {
 		log.Error("默认书签写入失败", logger.F("error", err.Error()))
 	}
 

@@ -2,7 +2,7 @@
 
 链享浏览器是一款用于管理独立浏览器环境、代理出口、浏览器内核和自动化任务的本地桌面应用。
 
-当前版本：`1.4.1`
+当前版本：`1.4.4`
 主要技术：Go、Wails、React、TypeScript  
 当前已验证平台：Windows amd64
 
@@ -48,6 +48,8 @@
 - 使用 `工作/AI` 形式维护多级书签目录
 - 导入 Chrome、Edge、Firefox 导出的 HTML 书签文件，并保留原目录结构
 - 按 URL 自动跳过重复项，可增量同步到已有未运行实例
+- 可全局关闭单条书签，也可只对指定实例关闭；实例再次启动时按当前设置写入书签栏
+- 关闭书签时同步过滤“启动打开”网址，并只移除由链享浏览器写入的对应书签
 
 ### 代理与网络
 
@@ -319,11 +321,11 @@ wails.json     Wails 应用与产品信息
 
 链享浏览器使用当前项目自己的 GitHub Releases 发布版本，不能直接使用上游 `black-ant/Ant-Browser` 的 Release 地址或文件名。
 
-- 项目仓库：<https://github.com/YuZangA/LianXiang-Browser>
-- Releases：<https://github.com/YuZangA/LianXiang-Browser/releases>
-- 当前版本：<https://github.com/YuZangA/LianXiang-Browser/releases/tag/v1.4.1>
+- 项目仓库：<https://github.com/TIANYA689/LianXiang-Browser>
+- Releases：<https://github.com/TIANYA689/LianXiang-Browser/releases>
+- 当前版本：<https://github.com/TIANYA689/LianXiang-Browser/releases/tag/v1.4.4>
 
-当前源码版本为 `v1.4.1`，Windows amd64 安装包和便携包可通过本仓库发布脚本生成。Linux 和 macOS 脚本已保留，但对应产物需要在各自平台完成构建验证后再上传。
+当前源码版本为 `v1.4.4`，Windows amd64 本地程序、安装包和便携包可通过本仓库发布脚本生成。Linux 和 macOS 脚本已保留，但对应产物需要在各自平台完成构建验证后再上传。
 
 建议的首次上传流程：
 
@@ -333,7 +335,7 @@ git init
 git add .
 git commit -m 'chore: initialize LianXiang Browser'
 git branch -M main
-git remote add origin 'https://github.com/YuZangA/LianXiang-Browser.git'
+git remote add origin 'git@github.com:TIANYA689/LianXiang-Browser.git'
 git push -u origin main
 ```
 
@@ -342,11 +344,11 @@ git push -u origin main
 ```powershell
 git switch main
 git pull
-git tag -a v1.4.1 -m 'LianXiang Browser v1.4.1'
-git push origin v1.4.1
+git tag -a v1.4.4 -m 'LianXiang Browser v1.4.4'
+git push origin v1.4.4
 ```
 
-然后在你自己的 GitHub 仓库中进入 `Releases`，选择刚推送的 `v1.4.1` 标签创建发布，并上传构建产物。
+然后在你自己的 GitHub 仓库中进入 `Releases`，选择刚推送的 `v1.4.4` 标签创建发布，并上传构建产物。
 
 Windows 发布：
 
@@ -360,9 +362,10 @@ Windows 发布：
 ```text
 publish\output\LianXiang-Browser-Setup-<version>.exe
 publish\output\LianXiang-Browser-<version>-windows-amd64-portable.zip
+publish\output\SHA256SUMS-<version>.txt
 ```
 
-其中 `zip` 只生成便携包，`both` 同时生成安装包和便携包。安装包需要 NSIS；便携包不依赖 NSIS。Linux 和 macOS 发布脚本会生成对应架构的 `.deb`、`.tar.gz`、`.app` 或 `.zip`，但当前二开版本尚未完成全平台重新验证。
+其中 `zip` 只生成便携包，`both` 同时生成安装包和便携包；两种模式都会为本次 Windows 产物生成 SHA-256 校验文件。安装包需要 NSIS；便携包不依赖 NSIS。Linux 和 macOS 发布脚本会生成对应架构的 `.deb`、`.tar.gz`、`.app` 或 `.zip`，但当前二开版本尚未完成全平台重新验证。
 
 发布前检查：
 
@@ -398,6 +401,8 @@ git push -u origin feature/profile-docs
 
 - [安全审计记录](SECURITY_AUDIT.md)
 - [更新记录](CHANGELOG.md)
+- [v1.4.4 发布说明](publish/RELEASE_NOTES-1.4.4.md)
+- [v1.4.2 发布说明](publish/RELEASE_NOTES-1.4.2.md)
 - [v1.4.1 发布说明](publish/RELEASE_NOTES-1.4.1.md)
 - [v1.4.0 发布说明](publish/RELEASE_NOTES-1.4.0.md)
 - [Windows 脚本说明](bat/README.md)

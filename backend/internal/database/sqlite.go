@@ -211,6 +211,14 @@ var migrations = []migration{
 			`ALTER TABLE browser_bookmarks ADD COLUMN folder TEXT NOT NULL DEFAULT ''`,
 		},
 	},
+	{
+		version: 14,
+		desc:    "书签表添加全局和单实例关闭配置",
+		stmts: []string{
+			`ALTER TABLE browser_bookmarks ADD COLUMN disabled INTEGER NOT NULL DEFAULT 0`,
+			`ALTER TABLE browser_bookmarks ADD COLUMN disabled_profile_ids TEXT NOT NULL DEFAULT '[]'`,
+		},
+	},
 	// ── 新版本在此追加，格式：
 	// {
 	//     version: 4,

@@ -315,6 +315,8 @@ export interface BrowserBookmark {
   url: string
   folder?: string
   openOnStart?: boolean
+  disabled?: boolean
+  disabledProfileIds?: string[]
 }
 
 export interface BookmarkSyncResult {

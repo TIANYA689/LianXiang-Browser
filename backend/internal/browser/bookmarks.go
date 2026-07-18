@@ -17,9 +17,14 @@ func toChromiumTime(t time.Time) string {
 	return fmt.Sprintf("%d", t.Sub(chromiumEpoch).Microseconds())
 }
 
-// EnsureDefaultBookmarks 将默认书签合并到书签栏（已存在的 URL 不重复添加）
+// EnsureDefaultBookmarks 将默认书签合并到书签栏（已存在的 URL 不重复添加）。
 func EnsureDefaultBookmarks(userDataDir string, bookmarks []config.BrowserBookmark) error {
-	if len(bookmarks) == 0 {
+	return SyncDefaultBookmarks(userDataDir, bookmarks, bookmarks)
+}
+
+// SyncDefaultBookmarks 添加启用的默认书签，并移除由本应用写入但已关闭的书签。
+func SyncDefaultBookmarks(userDataDir string, managedBookmarks, enabledBookmarks []config.BrowserBookmark) error {
+	if len(managedBookmarks) == 0 && len(enabledBookmarks) == 0 {
 		return nil
 	}
 
@@ -30,7 +35,7 @@ func EnsureDefaultBookmarks(userDataDir string, bookmarks []config.BrowserBookma
 
 	bookmarksPath := filepath.Join(profileDir, "Bookmarks")
 
-	// 尝试读取已有书签文件
+	// 尝试读取已有书签文件。
 	var root map[string]interface{}
 	if data, err := os.ReadFile(bookmarksPath); err == nil {
 		_ = json.Unmarshal(data, &root)
@@ -38,10 +43,32 @@ func EnsureDefaultBookmarks(userDataDir string, bookmarks []config.BrowserBookma
 
 	now := toChromiumTime(time.Now())
 
-	// 初始化空结构
+	// 没有启用书签时，无需为了关闭操作创建空文件。
+	if root == nil && len(enabledBookmarks) == 0 {
+		return nil
+	}
+
+	// 初始化空结构。
 	if root == nil {
 		root = newEmptyBookmarkRoot(now)
 	}
+
+	managedURLs := make(map[string]string, len(managedBookmarks))
+	enabledURLs := make(map[string]bool, len(enabledBookmarks))
+	for _, bookmark := range managedBookmarks {
+		url := strings.TrimSpace(bookmark.URL)
+		if url != "" {
+			managedURLs[strings.ToLower(url)] = bookmarkGUID(url)
+		}
+	}
+	for _, bookmark := range enabledBookmarks {
+		url := strings.TrimSpace(bookmark.URL)
+		if url != "" {
+			enabledURLs[strings.ToLower(url)] = true
+		}
+	}
+
+	removed := removeDisabledManagedBookmarks(root, managedURLs, enabledURLs)
 
 	// 取出 bookmark_bar children，按整个书签树收集已有 URL 集合
 	barChildren := extractBarChildren(root)
@@ -52,7 +79,7 @@ func EnsureDefaultBookmarks(userDataDir string, bookmarks []config.BrowserBookma
 
 	// 把不存在的默认书签追加到书签栏或指定的分组目录中。
 	added := false
-	for _, b := range bookmarks {
+	for _, b := range enabledBookmarks {
 		name := strings.TrimSpace(b.Name)
 		url := strings.TrimSpace(b.URL)
 		if name == "" || url == "" {
@@ -79,7 +106,7 @@ func EnsureDefaultBookmarks(userDataDir string, bookmarks []config.BrowserBookma
 		added = true
 	}
 
-	if !added {
+	if !added && !removed {
 		return nil
 	}
 
@@ -96,6 +123,66 @@ func EnsureDefaultBookmarks(userDataDir string, bookmarks []config.BrowserBookma
 		return fmt.Errorf("序列化书签失败: %w", err)
 	}
 	return os.WriteFile(bookmarksPath, out, 0644)
+}
+
+func removeDisabledManagedBookmarks(root map[string]interface{}, managedURLs map[string]string, enabledURLs map[string]bool) bool {
+	roots, ok := root["roots"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+	changed := false
+	for key, rawRoot := range roots {
+		folder, ok := rawRoot.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		children, ok := folder["children"].([]interface{})
+		if !ok {
+			continue
+		}
+		updated, removed := removeDisabledManagedNodes(children, managedURLs, enabledURLs)
+		if removed {
+			folder["children"] = updated
+			roots[key] = folder
+			changed = true
+		}
+	}
+	root["roots"] = roots
+	return changed
+}
+
+func removeDisabledManagedNodes(nodes []interface{}, managedURLs map[string]string, enabledURLs map[string]bool) ([]interface{}, bool) {
+	updated := make([]interface{}, 0, len(nodes))
+	changed := false
+	for _, rawNode := range nodes {
+		node, ok := rawNode.(map[string]interface{})
+		if !ok {
+			updated = append(updated, rawNode)
+			continue
+		}
+
+		if node["type"] == "url" {
+			url, _ := node["url"].(string)
+			urlKey := strings.ToLower(strings.TrimSpace(url))
+			expectedGUID, managed := managedURLs[urlKey]
+			guid, _ := node["guid"].(string)
+			if managed && !enabledURLs[urlKey] && strings.EqualFold(guid, expectedGUID) {
+				changed = true
+				continue
+			}
+		}
+
+		if node["type"] == "folder" {
+			children, _ := node["children"].([]interface{})
+			nextChildren, removed := removeDisabledManagedNodes(children, managedURLs, enabledURLs)
+			if removed {
+				node["children"] = nextChildren
+				changed = true
+			}
+		}
+		updated = append(updated, node)
+	}
+	return updated, changed
 }
 
 // newEmptyBookmarkRoot 构建一个空的书签根结构

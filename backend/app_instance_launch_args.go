@@ -1,10 +1,10 @@
 package backend
 
 import (
+	"fmt"
 	"lianxiang-browser/backend/internal/browser"
 	"lianxiang-browser/backend/internal/config"
 	"lianxiang-browser/backend/internal/logger"
-	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -77,7 +77,7 @@ func bookmarkStartURLs(bookmarks []BrowserBookmark) []string {
 	}
 	urls := make([]string, 0, len(bookmarks))
 	for _, bookmark := range bookmarks {
-		if bookmark.OpenOnStart {
+		if bookmark.OpenOnStart && !bookmark.Disabled {
 			urls = append(urls, bookmark.URL)
 		}
 	}

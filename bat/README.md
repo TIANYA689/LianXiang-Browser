@@ -103,16 +103,16 @@ bat\publish.bat
 bat\publish.bat W
 bat\publish.bat L
 bat\publish.bat B
-bat\publish.bat zip -Version 1.4.1
-bat\publish.bat both -Version 1.4.1
-bat\publish.bat W -Version 1.4.1 -WindowsFormat BOTH
-bat\publish.bat B -Version 1.4.1 -WindowsFormat BOTH
+bat\publish.bat zip -Version 1.4.4
+bat\publish.bat both -Version 1.4.4
+bat\publish.bat W -Version 1.4.4 -WindowsFormat BOTH
+bat\publish.bat B -Version 1.4.4 -WindowsFormat BOTH
 ```
 
 说明：
 
 - `zip` / `portable` 仅生成 Windows 便携 ZIP，`both` 同时生成 Windows 安装包和便携 ZIP。
-- `-Version 1.4.1` 会覆盖本次发布使用的版本号；未传时读取 `wails.json`。
+- `-Version 1.4.4` 会覆盖本次发布使用的版本号；未传时读取 `wails.json`。
 - `-WindowsFormat` 支持 `INSTALLER`、`PORTABLE`、`BOTH`。
 - Windows / Linux 包名、NSIS 安装包版本号，以及本次构建期间读取到的 `wails.json productVersion` 会统一使用该值。
 
@@ -151,6 +151,7 @@ Windows 分支使用的项目路径：
 输出：
 - publish\output\LianXiang-Browser-Setup-<version>.exe
 - publish\output\LianXiang-Browser-<version>-windows-amd64-portable.zip
+- publish\output\SHA256SUMS-<version>.txt
 ```
 
 说明：
@@ -187,6 +188,7 @@ Windows 产物：
 ```text
 publish\output\LianXiang-Browser-Setup-<version>.exe
 publish\output\LianXiang-Browser-<version>-windows-amd64-portable.zip
+publish\output\SHA256SUMS-<version>.txt
 ```
 
 ### `recover-profiles.ps1`

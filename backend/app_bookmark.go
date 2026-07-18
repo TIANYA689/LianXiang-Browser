@@ -58,10 +58,12 @@ func (a *App) BookmarkSave(items []BrowserBookmark) error {
 		url := strings.TrimSpace(item.URL)
 		if name != "" && url != "" {
 			valid = append(valid, BrowserBookmark{
-				Name:        name,
-				URL:         url,
-				Folder:      normalizeBookmarkFolder(item.Folder),
-				OpenOnStart: item.OpenOnStart,
+				Name:               name,
+				URL:                url,
+				Folder:             normalizeBookmarkFolder(item.Folder),
+				OpenOnStart:        item.OpenOnStart,
+				Disabled:           item.Disabled,
+				DisabledProfileIDs: normalizeBookmarkProfileIDs(item.DisabledProfileIDs),
 			})
 		}
 	}
@@ -106,10 +108,12 @@ func mergeBookmarksByURL(items []BrowserBookmark, required []BrowserBookmark) []
 		}
 		seen[key] = struct{}{}
 		merged = append(merged, BrowserBookmark{
-			Name:        name,
-			URL:         url,
-			Folder:      normalizeBookmarkFolder(item.Folder),
-			OpenOnStart: item.OpenOnStart,
+			Name:               name,
+			URL:                url,
+			Folder:             normalizeBookmarkFolder(item.Folder),
+			OpenOnStart:        item.OpenOnStart,
+			Disabled:           item.Disabled,
+			DisabledProfileIDs: normalizeBookmarkProfileIDs(item.DisabledProfileIDs),
 		})
 	}
 	for _, item := range items {
@@ -134,12 +138,52 @@ func normalizeBookmarkFolder(folder string) string {
 	return strings.Join(clean, "/")
 }
 
+func normalizeBookmarkProfileIDs(profileIDs []string) []string {
+	seen := make(map[string]struct{}, len(profileIDs))
+	clean := make([]string, 0, len(profileIDs))
+	for _, profileID := range profileIDs {
+		profileID = strings.TrimSpace(profileID)
+		if profileID == "" {
+			continue
+		}
+		key := strings.ToLower(profileID)
+		if _, ok := seen[key]; ok {
+			continue
+		}
+		seen[key] = struct{}{}
+		clean = append(clean, profileID)
+	}
+	return clean
+}
+
+func bookmarkEnabledForProfile(bookmark BrowserBookmark, profileID string) bool {
+	if bookmark.Disabled {
+		return false
+	}
+	for _, disabledProfileID := range bookmark.DisabledProfileIDs {
+		if strings.EqualFold(strings.TrimSpace(disabledProfileID), strings.TrimSpace(profileID)) {
+			return false
+		}
+	}
+	return true
+}
+
+func bookmarksForProfile(bookmarks []BrowserBookmark, profileID string) []BrowserBookmark {
+	enabled := make([]BrowserBookmark, 0, len(bookmarks))
+	for _, bookmark := range bookmarks {
+		if bookmarkEnabledForProfile(bookmark, profileID) {
+			enabled = append(enabled, bookmark)
+		}
+	}
+	return enabled
+}
+
 // BookmarkSyncToProfiles 将当前默认书签增量同步到已有未运行实例。
 func (a *App) BookmarkSyncToProfiles() BookmarkSyncResult {
 	result := BookmarkSyncResult{}
 	log := logger.New("Bookmark")
 	bookmarks := a.BookmarkList()
-	if len(bookmarks) == 0 || a.browserMgr == nil {
+	if a.browserMgr == nil {
 		return result
 	}
 
@@ -159,7 +203,8 @@ func (a *App) BookmarkSyncToProfiles() BookmarkSyncResult {
 		}
 
 		userDataDir := a.browserMgr.ResolveUserDataDir(profile)
-		if err := browser.EnsureDefaultBookmarks(userDataDir, bookmarks); err != nil {
+		enabledBookmarks := bookmarksForProfile(bookmarks, profile.ProfileId)
+		if err := browser.SyncDefaultBookmarks(userDataDir, bookmarks, enabledBookmarks); err != nil {
 			result.Failed++
 			name := profile.ProfileName
 			if name == "" {

@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" role="img" aria-label="链享浏览器图标">
+  <defs>
+    <linearGradient id="background" x1="20" y1="12" x2="105" y2="118" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#18314e" />
+      <stop offset="1" stop-color="#0b1528" />
+    </linearGradient>
+  </defs>
+
+  <rect x="4" y="4" width="120" height="120" rx="27" fill="url(#background)" />
+  <rect x="5" y="5" width="118" height="118" rx="26" fill="none" stroke="#5f7e9c" stroke-opacity="0.38" />
+
+  <path
+    d="M35 28v43c0 13 9 22 22 22h36"
+    fill="none"
+    stroke="#36bffa"
+    stroke-width="15"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+  <path
+    d="M93 100V57c0-13-9-22-22-22H35"
+    fill="none"
+    stroke="#49ddb2"
+    stroke-width="15"
+    stroke-linecap="round"
+    stroke-linejoin="round"
+  />
+
+  <path d="M79 35H64" fill="none" stroke="#0f2135" stroke-width="17" stroke-linecap="round" />
+  <path d="M49 93h15" fill="none" stroke="#0f2135" stroke-width="17" stroke-linecap="round" />
+  <path d="M78 35h-7" fill="none" stroke="#49ddb2" stroke-width="15" stroke-linecap="round" />
+  <path d="M50 93h7" fill="none" stroke="#36bffa" stroke-width="15" stroke-linecap="round" />
+</svg>

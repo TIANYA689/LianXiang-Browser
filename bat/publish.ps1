@@ -670,6 +670,35 @@ function Remove-WindowsStaging {
     }
 }
 
+function Write-WindowsChecksums {
+    $outputDir = Join-Path $repoRoot "publish/output"
+    $artifacts = New-Object System.Collections.Generic.List[string]
+    if ($script:WindowsInstallerDone) {
+        $artifacts.Add((Join-Path $outputDir "LianXiang-Browser-Setup-$script:ResolvedVersion.exe"))
+    }
+    if ($script:WindowsPortableDone) {
+        $artifacts.Add((Join-Path $outputDir "LianXiang-Browser-$script:ResolvedVersion-windows-amd64-portable.zip"))
+    }
+    if ($artifacts.Count -eq 0) {
+        return
+    }
+
+    $lines = New-Object System.Collections.Generic.List[string]
+    foreach ($artifact in $artifacts) {
+        if (-not (Test-Path -LiteralPath $artifact -PathType Leaf)) {
+            throw "生成校验文件失败，产物不存在: $artifact"
+        }
+        $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $artifact).Hash.ToUpperInvariant()
+        $lines.Add("$hash  $([System.IO.Path]::GetFileName($artifact))")
+    }
+
+    $checksumName = "SHA256SUMS-$script:ResolvedVersion.txt"
+    $checksumPath = Join-Path $outputDir $checksumName
+    [System.IO.File]::WriteAllLines($checksumPath, $lines, [System.Text.UTF8Encoding]::new($false))
+    Write-Host "✓ SHA-256 校验文件生成成功: publish\output\$checksumName"
+    Write-Host ""
+}
+
 function Publish-Windows {
     param(
         [Parameter(Mandatory = $true)]
@@ -701,6 +730,8 @@ function Publish-Windows {
     finally {
         Remove-WindowsStaging -StagingDir $stagingDir
     }
+
+    Write-WindowsChecksums
 
     Write-Host "✓ Windows 打包完成"
     Write-Host ""
@@ -772,6 +803,9 @@ try {
     }
     if ($script:WindowsPortableDone) {
         Write-Host "Windows 便携包: publish\output\LianXiang-Browser-$script:ResolvedVersion-windows-amd64-portable.zip"
+    }
+    if ($script:WindowsInstallerDone -or $script:WindowsPortableDone) {
+        Write-Host "SHA-256 校验: publish\output\SHA256SUMS-$script:ResolvedVersion.txt"
     }
     if ($script:LinuxDone) {
         Write-Host "Linux 产物目录: publish\output\"
