@@ -332,6 +332,8 @@ export function ValidateProxyConfig(arg1:string,arg2:string):Promise<backend.Pro
 
 export function WaitInstanceDebugReady(arg1:string,arg2:number,arg3:time.Duration):Promise<browser.Profile>;
 
+export function WindowSyncCopyMasterTabs(arg1:string,arg2:Array<string>):Promise<backend.WindowSyncActionResult>;
+
 export function WindowSyncGetState():Promise<backend.WindowSyncState>;
 
 export function WindowSyncListSessions():Promise<Array<backend.WindowSyncSession>>;
@@ -341,3 +343,9 @@ export function WindowSyncShowWindow(arg1:string):Promise<void>;
 export function WindowSyncStart(arg1:backend.WindowSyncStartInput):Promise<backend.WindowSyncState>;
 
 export function WindowSyncStop():Promise<backend.WindowSyncState>;
+
+export function WindowSyncTabAction(arg1:Array<string>,arg2:string,arg3:string):Promise<backend.WindowSyncActionResult>;
+
+export function WindowSyncTextAction(arg1:Array<string>,arg2:string,arg3:boolean):Promise<backend.WindowSyncActionResult>;
+
+export function WindowSyncWindowAction(arg1:Array<string>,arg2:string):Promise<backend.WindowSyncActionResult>;

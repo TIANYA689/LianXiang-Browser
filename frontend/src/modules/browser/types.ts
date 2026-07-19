@@ -357,6 +357,12 @@ export interface WindowSyncState {
   lastError: string
 }
 
+export interface WindowSyncActionResult {
+  requested: number
+  succeeded: number
+  failed: string[]
+}
+
 export interface BookmarkSyncResult {
   total: number
   synced: number

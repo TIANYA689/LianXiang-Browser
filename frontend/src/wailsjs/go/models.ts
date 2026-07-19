@@ -847,6 +847,22 @@ export namespace backend {
 	        this.filePath = source["filePath"];
 	    }
 	}
+	export class WindowSyncActionResult {
+	    requested: number;
+	    succeeded: number;
+	    failed: string[];
+
+	    static createFrom(source: any = {}) {
+	        return new WindowSyncActionResult(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.requested = source["requested"];
+	        this.succeeded = source["succeeded"];
+	        this.failed = source["failed"];
+	    }
+	}
 	export class WindowSyncSession {
 	    profileId: string;
 	    profileName: string;

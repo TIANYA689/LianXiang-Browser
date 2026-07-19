@@ -646,6 +646,10 @@ export function WaitInstanceDebugReady(arg1, arg2, arg3) {
   return window['go']['main']['App']['WaitInstanceDebugReady'](arg1, arg2, arg3);
 }
 
+export function WindowSyncCopyMasterTabs(arg1, arg2) {
+  return window['go']['main']['App']['WindowSyncCopyMasterTabs'](arg1, arg2);
+}
+
 export function WindowSyncGetState() {
   return window['go']['main']['App']['WindowSyncGetState']();
 }
@@ -664,4 +668,16 @@ export function WindowSyncStart(arg1) {
 
 export function WindowSyncStop() {
   return window['go']['main']['App']['WindowSyncStop']();
+}
+
+export function WindowSyncTabAction(arg1, arg2, arg3) {
+  return window['go']['main']['App']['WindowSyncTabAction'](arg1, arg2, arg3);
+}
+
+export function WindowSyncTextAction(arg1, arg2, arg3) {
+  return window['go']['main']['App']['WindowSyncTextAction'](arg1, arg2, arg3);
+}
+
+export function WindowSyncWindowAction(arg1, arg2) {
+  return window['go']['main']['App']['WindowSyncWindowAction'](arg1, arg2);
 }

@@ -1,5 +1,6 @@
 import type {
   WindowSyncSession,
+  WindowSyncActionResult,
   WindowSyncSettings,
   WindowSyncStartInput,
   WindowSyncState,
@@ -80,4 +81,36 @@ export async function showWindowSyncProfile(profileId: string): Promise<void> {
   if (bindings?.WindowSyncShowWindow) {
     await bindings.WindowSyncShowWindow(profileId)
   }
+}
+
+export async function runWindowSyncWindowAction(profileIds: string[], action: string): Promise<WindowSyncActionResult> {
+  const bindings: any = await getBindings()
+  if (bindings?.WindowSyncWindowAction) {
+    return await bindings.WindowSyncWindowAction(profileIds, action)
+  }
+  return { requested: profileIds.length, succeeded: profileIds.length, failed: [] }
+}
+
+export async function runWindowSyncTextAction(profileIds: string[], text: string, clear: boolean): Promise<WindowSyncActionResult> {
+  const bindings: any = await getBindings()
+  if (bindings?.WindowSyncTextAction) {
+    return await bindings.WindowSyncTextAction(profileIds, text, clear)
+  }
+  return { requested: profileIds.length, succeeded: profileIds.length, failed: [] }
+}
+
+export async function runWindowSyncTabAction(profileIds: string[], action: string, targetUrl = ''): Promise<WindowSyncActionResult> {
+  const bindings: any = await getBindings()
+  if (bindings?.WindowSyncTabAction) {
+    return await bindings.WindowSyncTabAction(profileIds, action, targetUrl)
+  }
+  return { requested: profileIds.length, succeeded: profileIds.length, failed: [] }
+}
+
+export async function copyMasterWindowSyncTabs(masterProfileId: string, targetProfileIds: string[]): Promise<WindowSyncActionResult> {
+  const bindings: any = await getBindings()
+  if (bindings?.WindowSyncCopyMasterTabs) {
+    return await bindings.WindowSyncCopyMasterTabs(masterProfileId, targetProfileIds)
+  }
+  return { requested: targetProfileIds.length, succeeded: targetProfileIds.length, failed: [] }
 }
