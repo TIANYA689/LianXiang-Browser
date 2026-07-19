@@ -331,3 +331,13 @@ export function UpdateGroup(arg1:string,arg2:browser.GroupInput):Promise<browser
 export function ValidateProxyConfig(arg1:string,arg2:string):Promise<backend.ProxyValidationResult>;
 
 export function WaitInstanceDebugReady(arg1:string,arg2:number,arg3:time.Duration):Promise<browser.Profile>;
+
+export function WindowSyncGetState():Promise<backend.WindowSyncState>;
+
+export function WindowSyncListSessions():Promise<Array<backend.WindowSyncSession>>;
+
+export function WindowSyncShowWindow(arg1:string):Promise<void>;
+
+export function WindowSyncStart(arg1:backend.WindowSyncStartInput):Promise<backend.WindowSyncState>;
+
+export function WindowSyncStop():Promise<backend.WindowSyncState>;

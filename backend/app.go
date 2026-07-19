@@ -1,6 +1,7 @@
 package backend
 
 import (
+	"context"
 	"lianxiang-browser/backend/internal/automation"
 	"lianxiang-browser/backend/internal/browser"
 	"lianxiang-browser/backend/internal/config"
@@ -8,7 +9,6 @@ import (
 	"lianxiang-browser/backend/internal/launchcode"
 	"lianxiang-browser/backend/internal/logger"
 	"lianxiang-browser/backend/internal/proxy"
-	"context"
 	"strings"
 	"sync"
 )
@@ -46,6 +46,8 @@ type App struct {
 	deferredStartTargets   map[string][]string
 	automationTargetMu     sync.Mutex
 	automationTargetCursor map[string]string
+	windowSyncMu           sync.Mutex
+	windowSync             *windowSyncController
 	stopServicesOnce       sync.Once
 	finalizeOnce           sync.Once
 }

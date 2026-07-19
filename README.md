@@ -2,7 +2,7 @@
 
 链享浏览器是一款用于管理独立浏览器环境、代理出口、浏览器内核和自动化任务的本地桌面应用。
 
-当前版本：`1.4.4`
+当前版本：`1.4.5`
 主要技术：Go、Wails、React、TypeScript  
 当前已验证平台：Windows amd64
 
@@ -50,6 +50,15 @@
 - 按 URL 自动跳过重复项，可增量同步到已有未运行实例
 - 可全局关闭单条书签，也可只对指定实例关闭；实例再次启动时按当前设置写入书签栏
 - 关闭书签时同步过滤“启动打开”网址，并只移除由链享浏览器写入的对应书签
+
+### 窗口同步器
+
+- 从运行中的实例里设置一个主窗口和一个或多个被控窗口
+- 同步当前活动网页中的点击、确认键、输入内容、滚动位置和页面跳转
+- 同步过程中实时显示事件数量、最近事件类型和连接错误
+- 可单独恢复显示任意已选浏览器窗口
+
+窗口同步使用实例本机 CDP 调试通道，只作用于当前活动网页。Chrome 地址栏、书签栏、扩展弹窗、下载框和系统对话框属于浏览器原生界面，不在同步范围内。
 
 ### 代理与网络
 
@@ -323,9 +332,9 @@ wails.json     Wails 应用与产品信息
 
 - 项目仓库：<https://github.com/TIANYA689/LianXiang-Browser>
 - Releases：<https://github.com/TIANYA689/LianXiang-Browser/releases>
-- 当前版本：<https://github.com/TIANYA689/LianXiang-Browser/releases/tag/v1.4.4>
+- 当前版本：<https://github.com/TIANYA689/LianXiang-Browser/releases/tag/v1.4.5>
 
-当前源码版本为 `v1.4.4`，Windows amd64 本地程序、安装包和便携包可通过本仓库发布脚本生成。Linux 和 macOS 脚本已保留，但对应产物需要在各自平台完成构建验证后再上传。
+当前源码版本为 `v1.4.5`，Windows amd64 本地程序、安装包和便携包可通过本仓库发布脚本生成。Linux 和 macOS 脚本已保留，但对应产物需要在各自平台完成构建验证后再上传。
 
 建议的首次上传流程：
 
@@ -344,11 +353,11 @@ git push -u origin main
 ```powershell
 git switch main
 git pull
-git tag -a v1.4.4 -m 'LianXiang Browser v1.4.4'
-git push origin v1.4.4
+git tag -a v1.4.5 -m 'LianXiang Browser v1.4.5'
+git push origin v1.4.5
 ```
 
-然后在你自己的 GitHub 仓库中进入 `Releases`，选择刚推送的 `v1.4.4` 标签创建发布，并上传构建产物。
+然后在你自己的 GitHub 仓库中进入 `Releases`，选择刚推送的 `v1.4.5` 标签创建发布，并上传构建产物。
 
 Windows 发布：
 
@@ -401,6 +410,7 @@ git push -u origin feature/profile-docs
 
 - [安全审计记录](SECURITY_AUDIT.md)
 - [更新记录](CHANGELOG.md)
+- [v1.4.5 发布说明](publish/RELEASE_NOTES-1.4.5.md)
 - [v1.4.4 发布说明](publish/RELEASE_NOTES-1.4.4.md)
 - [v1.4.2 发布说明](publish/RELEASE_NOTES-1.4.2.md)
 - [v1.4.1 发布说明](publish/RELEASE_NOTES-1.4.1.md)

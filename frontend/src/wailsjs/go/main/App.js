@@ -645,3 +645,23 @@ export function ValidateProxyConfig(arg1, arg2) {
 export function WaitInstanceDebugReady(arg1, arg2, arg3) {
   return window['go']['main']['App']['WaitInstanceDebugReady'](arg1, arg2, arg3);
 }
+
+export function WindowSyncGetState() {
+  return window['go']['main']['App']['WindowSyncGetState']();
+}
+
+export function WindowSyncListSessions() {
+  return window['go']['main']['App']['WindowSyncListSessions']();
+}
+
+export function WindowSyncShowWindow(arg1) {
+  return window['go']['main']['App']['WindowSyncShowWindow'](arg1);
+}
+
+export function WindowSyncStart(arg1) {
+  return window['go']['main']['App']['WindowSyncStart'](arg1);
+}
+
+export function WindowSyncStop() {
+  return window['go']['main']['App']['WindowSyncStop']();
+}

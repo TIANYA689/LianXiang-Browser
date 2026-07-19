@@ -847,6 +847,134 @@ export namespace backend {
 	        this.filePath = source["filePath"];
 	    }
 	}
+	export class WindowSyncSession {
+	    profileId: string;
+	    profileName: string;
+	    tags: string[];
+	    running: boolean;
+	    debugReady: boolean;
+	    debugPort: number;
+	    pageTitle: string;
+	    pageUrl: string;
+	    available: boolean;
+	    warning: string;
+
+	    static createFrom(source: any = {}) {
+	        return new WindowSyncSession(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.profileId = source["profileId"];
+	        this.profileName = source["profileName"];
+	        this.tags = source["tags"];
+	        this.running = source["running"];
+	        this.debugReady = source["debugReady"];
+	        this.debugPort = source["debugPort"];
+	        this.pageTitle = source["pageTitle"];
+	        this.pageUrl = source["pageUrl"];
+	        this.available = source["available"];
+	        this.warning = source["warning"];
+	    }
+	}
+	export class WindowSyncSettings {
+	    syncClicks: boolean;
+	    syncInputs: boolean;
+	    syncScroll: boolean;
+	    syncNavigation: boolean;
+
+	    static createFrom(source: any = {}) {
+	        return new WindowSyncSettings(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.syncClicks = source["syncClicks"];
+	        this.syncInputs = source["syncInputs"];
+	        this.syncScroll = source["syncScroll"];
+	        this.syncNavigation = source["syncNavigation"];
+	    }
+	}
+	export class WindowSyncStartInput {
+	    masterProfileId: string;
+	    targetProfileIds: string[];
+	    settings: WindowSyncSettings;
+
+	    static createFrom(source: any = {}) {
+	        return new WindowSyncStartInput(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.masterProfileId = source["masterProfileId"];
+	        this.targetProfileIds = source["targetProfileIds"];
+	        this.settings = this.convertValues(source["settings"], WindowSyncSettings);
+	    }
+
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
+	export class WindowSyncState {
+	    active: boolean;
+	    masterProfileId: string;
+	    targetProfileIds: string[];
+	    settings: WindowSyncSettings;
+	    startedAt: string;
+	    lastEventAt: string;
+	    lastEventType: string;
+	    eventCount: number;
+	    lastError: string;
+
+	    static createFrom(source: any = {}) {
+	        return new WindowSyncState(source);
+	    }
+
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.active = source["active"];
+	        this.masterProfileId = source["masterProfileId"];
+	        this.targetProfileIds = source["targetProfileIds"];
+	        this.settings = this.convertValues(source["settings"], WindowSyncSettings);
+	        this.startedAt = source["startedAt"];
+	        this.lastEventAt = source["lastEventAt"];
+	        this.lastEventType = source["lastEventType"];
+	        this.eventCount = source["eventCount"];
+	        this.lastError = source["lastError"];
+	    }
+
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
+	}
 
 }
 

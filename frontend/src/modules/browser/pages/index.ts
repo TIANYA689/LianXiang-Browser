@@ -1,5 +1,6 @@
 export { TagManagementPage } from './TagManagementPage'
 export { BrowserListPage } from './BrowserListPage'
+export { WindowSyncPage } from './WindowSyncPage'
 export { BrowserDetailPage } from './BrowserDetailPage'
 export { BrowserEditPage } from './BrowserEditPage'
 export { BrowserCopyPage } from './BrowserCopyPage'

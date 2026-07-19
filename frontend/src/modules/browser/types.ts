@@ -319,6 +319,44 @@ export interface BrowserBookmark {
   disabledProfileIds?: string[]
 }
 
+export interface WindowSyncSettings {
+  syncClicks: boolean
+  syncInputs: boolean
+  syncScroll: boolean
+  syncNavigation: boolean
+}
+
+export interface WindowSyncStartInput {
+  masterProfileId: string
+  targetProfileIds: string[]
+  settings: WindowSyncSettings
+}
+
+export interface WindowSyncSession {
+  profileId: string
+  profileName: string
+  tags: string[]
+  running: boolean
+  debugReady: boolean
+  debugPort: number
+  pageTitle: string
+  pageUrl: string
+  available: boolean
+  warning: string
+}
+
+export interface WindowSyncState {
+  active: boolean
+  masterProfileId: string
+  targetProfileIds: string[]
+  settings: WindowSyncSettings
+  startedAt: string
+  lastEventAt: string
+  lastEventType: string
+  eventCount: number
+  lastError: string
+}
+
 export interface BookmarkSyncResult {
   total: number
   synced: number

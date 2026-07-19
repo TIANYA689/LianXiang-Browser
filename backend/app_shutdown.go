@@ -1,8 +1,8 @@
 package backend
 
 import (
-	"lianxiang-browser/backend/internal/logger"
 	"context"
+	"lianxiang-browser/backend/internal/logger"
 	"os/exec"
 	goruntime "runtime"
 	"strings"
@@ -12,6 +12,8 @@ import (
 
 func (a *App) shutdown(ctx context.Context) {
 	log := logger.New("App")
+	// 页面同步依赖应用内的 CDP 长连接，即使仅退出管理端也必须先释放。
+	a.stopWindowSyncRuntime()
 	if a.shouldStopRuntimeServicesOnShutdown() {
 		log.Info("应用正在关闭...")
 		a.stopRuntimeServices()
@@ -80,6 +82,7 @@ func ShouldBlockClose(a *App, ctx context.Context) bool {
 
 func (a *App) stopRuntimeServices() {
 	a.stopServicesOnce.Do(func() {
+		a.stopWindowSyncRuntime()
 		if a.automationMgr != nil {
 			a.automationMgr.StopAllTasks()
 		}

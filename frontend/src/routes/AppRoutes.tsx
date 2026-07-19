@@ -61,6 +61,10 @@ const AutomationPage = lazyNamed(
   () => import("../modules/browser/pages/AutomationPage"),
   "AutomationPage",
 );
+const WindowSyncPage = lazyNamed(
+  () => import("../modules/browser/pages/WindowSyncPage"),
+  "WindowSyncPage",
+);
 const AutomationScriptDetailPage = lazyNamed(
   () => import("../modules/browser/pages/AutomationScriptDetailPage"),
   "AutomationScriptDetailPage",
@@ -73,6 +77,7 @@ export function AppRoutes() {
       <Route path="/charts" element={<ChartsPage />} />
       <Route path="/settings" element={<SettingsPage />} />
       <Route path="/browser/list" element={<BrowserListPage />} />
+      <Route path="/browser/window-sync" element={<WindowSyncPage />} />
       <Route path="/browser/detail/:id" element={<BrowserDetailPage />} />
       <Route path="/browser/edit/:id" element={<BrowserEditPage />} />
       <Route path="/browser/copy/:id" element={<BrowserCopyPage />} />
